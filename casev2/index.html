@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta charset="utf-8" />
+		<link rel="stylesheet" href="/styles/additional-style.css" />
+		<link rel="stylesheet" href="./styles.css" />
+
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+		<script src="/scripts/to-user.js"></script>
+		<script src="/scripts/to-case.js"></script>
+		<script src="./scripts.js"></script>
+		<script defer>
+			toUser((user, headers) => {
+				if (!user) {
+					const loginNotice = document.getElementById('loginNotice');
+					const loginNoticeBlock = document.getElementById('loginNoticeBlock');
+					const spinButton = document.getElementById('startButton');
+
+					loginNoticeBlock.style.display = 'flex';
+					loginNotice.style.display = 'flex';
+					spinButton.style.display = 'none';
+				}
+			});
+			toUser(toUserProfileUI);
+			toCase((_case, items, headers) => {
+				window.imageDict = items.reduce((acc, item) => {
+					acc[item.id] = item;
+					return acc;
+				}, {});
+
+				document.title = _case.name;
+
+				const caseDataContainer = $('.caseData');
+				caseDataContainer.empty();
+				caseDataContainer.append(`
+					<h1>${_case.name}</h1>
+					<img id="startImage" src="${_case.image}" />
+				`);
+
+				$('#restartButton').text(`Открыть снова за: ${_case.price}₽`);
+
+				const caseItemsContainer = $('#caseItemsContainer');
+				caseItemsContainer.empty();
+				items.forEach(item => {
+					const soder = $(`
+            <div class="soder">
+                <h4>${item.name}</h4>
+                <img src="${item.image}" />
+                <p>${item.price}₽</p>
+            </div>
+        `);
+					caseItemsContainer.append(soder);
+				});
+
+				load(headers);
+			});
+		</script>
+	</head>
+	<body>
+		<div class="layer1">
+			<a
+				href="https://jackhanmacsgolkgame.pythonanywhere.com/ru/steam/login"
+				class="pressed-button steam-login-button"
+			>
+				<img src="/images/steam.svg" class="button-icon" alt="Steam Icon" />
+				<h4 class="button-text">ВОЙТИ</h4>
+			</a>
+		</div>
+		<a href="/user.html" id="user-profile" class="user-profile hidden">
+			<div class="profile-view">
+				<div class="profile-avatar">
+					<img id="user-avatar" src="" alt="User Avatar" />
+				</div>
+				<div class="profile-info">
+					<div class="profile-nickname" id="user-nickname"></div>
+					<div class="profile-balance" id="user-balance"></div>
+				</div>
+			</div>
+		</a>
+
+		<div class="caseData"></div>
+		<div class="overlay" id="overlay"></div>
+
+		<!-- Модальное окно с выигрышем -->
+		<div id="winModal">
+			<h2>Поздравляем!</h2>
+			<img src="" alt="Приз" id="winImage" />
+			<p id="winText"></p>
+			<button id="closeWinBtn">Закрыть</button>
+		</div>
+		<div id="main" style="display: none">
+			<div id="mxwidth">
+				<ul id="boxes"></ul>
+			</div>
+			<div id="win"></div>
+			<div id="win-bottom"></div>
+		</div>
+		<div class="container">
+			<button id="startButton" class="button">Открыть</button>
+			<button id="restartButton" class="button" style="display: none">
+				Открыть снова за: 180₽
+			</button>
+		</div>
+		<div id="loadingSpinner" class="spinner" style="display: none"></div>
+		<div
+			id="loadingText"
+			style="
+				display: none;
+				text-align: center;
+				color: white;
+				margin-top: 15px;
+				font-family: sans-serif;
+				font-size: 15px;
+				font-weight: bold;
+				color: gray;
+			"
+		>
+			ОТКРЫВАЕТСЯ
+		</div>
+		<h2>СОДЕРЖИМОЕ КЕЙСА</h2>
+		<div class="container" id="caseItemsContainer"></div>
+	</body>
+</html>

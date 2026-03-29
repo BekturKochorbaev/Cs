@@ -1,0 +1,113 @@
+/* additional-style.css — МИНИМАЛИСТИЧНЫЙ, ПОД БРОНЗУ #cd7f32 */
+/* Только дополнения к global.css — без конфликтов */
+
+* {
+    text-decoration: none !important;
+}
+
+/* === ГРАДИЕНТ ПОД КЕЙСАМИ === */
+.case-image::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        to bottom,
+        transparent 70%,
+        rgba(0, 0, 0, 0.5) 100%
+    );
+    pointer-events: none;
+    border-radius: 18px;
+}
+
+/* === ПРОСТЫЕ КЕЙСЫ (БЕЗ ГРАДИЕНТА) === */
+.simple-case-image::after {
+    display: none;
+}
+
+/* === АДАПТИВНОСТЬ === */
+@media (max-width: 1200px) {
+    footer {
+        margin-top: 60px;
+        padding: 15px 0;
+    }
+}
+
+@media (max-width: 992px) {
+    footer {
+        margin-top: 50px;
+    }
+    .footer-content {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 0 10px;
+    }
+    footer {
+        margin-top: 40px;
+        padding: 12px 0;
+    }
+    .footer-content {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 576px) {
+    footer {
+        margin-top: 30px;
+        padding: 10px 0;
+    }
+    .footer-content {
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 320px) {
+    footer {
+        margin-top: 20px;
+        padding: 8px 0;
+    }
+    .footer-content {
+        font-size: 0.7rem;
+    }
+}
+
+/* === АНИМАЦИЯ ПОЯВЛЕНИЯ КЕЙСОВ === */
+.cases {
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeInUp 0.7s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* === ДОПОЛНИТЕЛЬНЫЕ УЛУЧШЕНИЯ === */
+/* Убираем подчёркивание у ссылок в профиле */
+.profile-nickname,
+.profile-balance {
+    text-decoration: none !important;
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    -webkit-text-fill-color: inherit !important;
+}
+
+/* Плавный скролл */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Убираем лишние отступы у body */
+body {
+    margin: 0;
+    padding: 0;
+}

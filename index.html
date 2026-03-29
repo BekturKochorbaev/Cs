@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+	<head>
+		<title>GLDROP - Лучшие Кейсы CS2</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="styles/global.css" />
+		<link rel="stylesheet" href="styles/additional-style.css" />
+		<link rel="icon" href="logo.png" type="image/png" />
+		<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	</head>
+	<body>
+		<!-- Фоновые частицы -->
+		<div class="particles-bg">
+			<div class="particle"></div>
+			<div class="particle"></div>
+			<div class="particle"></div>
+			<div class="particle"></div>
+			<div class="particle"></div>
+		</div>
+
+		<header class="header-main">
+			<div class="nav-container">
+				<!-- ЛОГО + ЯЗЫК -->
+				<div class="logo-language-group">
+					<div class="Logo">
+						<a href="index.html"><img src="logo.png" alt="GLDROP Logo" /></a>
+						<a href="index.html"><h1 class="logo-text">GLDROP</h1></a>
+					</div>
+					<div class="language-container">
+						<button class="language-button">
+							RU <i class="fas fa-chevron-down arrow-icon"></i>
+						</button>
+						<div class="language-dropdown">
+							<a href="#" data-lang="ru">RU</a>
+							<a href="#" data-lang="en">EN</a>
+							<!--<a href="#" data-lang="fr">FR</a>
+							<a href="#" data-lang="pl">PL</a>
+							<a href="#" data-lang="pt">PT</a>
+							<a href="#" data-lang="de">DE</a>
+							<a href="#" data-lang="es">ES</a>-->
+						</div>
+					</div>
+				</div>
+
+				<!-- КНОПКА ВОЙТИ -->
+				<div class="layer1">
+					<a href="https://jackhanmacsgolkgame.pythonanywhere.com/ru/steam/login" class="pressed-button steam-login-button">
+						<i class="fab fa-steam button-icon"></i>
+						<h4 class="button-text">ВОЙТИ</h4>
+					</a>
+				</div>
+
+				<!-- ЛИЧНЫЙ КАБИНЕТ -->
+				<div id="user-profile" class="hidden" style="display: none; align-items: center; gap: 1rem;">
+					<a href="user.html" class="profile-link">
+						<div class="profile-view">
+							<div class="profile-avatar">
+								<img id="user-avatar" src="" alt="User Avatar" />
+							</div>
+							<div class="profile-info">
+								<div class="profile-nickname" id="user-nickname"></div>
+								<div class="profile-balance" id="user-balance"></div>
+							</div>
+							<div class="profile-deposit" id="depositPlusButton">
+								<i class="fas fa-plus"></i>
+								<span class="rub-icon">₽</span>
+							</div>
+							<i class="fas fa-user profile-icon"></i>
+						</div>
+					</a>
+
+					<!-- КНОПКА ВЫХОДА -->
+					<button id="logoutButton" class="logout-button">
+						<i class="fas fa-sign-out-alt"></i>
+					</button>
+				</div>
+			</div>
+		</header>
+
+		<main>
+			<div class="header">
+				<h5>НАШИ СБОРКИ</h5>★
+			</div>
+			<div class="container" id="cases"></div>
+
+			<section class="features-section">
+				<div class="feature-card">
+					<i class="fas fa-shield-alt"></i>
+					<h3>Provably Fair</h3>
+					<p>Прозрачные шансы - проверь каждый результат!</p>
+				</div>
+				<div class="feature-card">
+					<i class="fas fa-gift"></i>
+					<h3>Ежедневные Бонусы</h3>
+					<p>Бесплатные кейсы и промокоды каждый день</p>
+				</div>
+				<div class="feature-card">
+					<i class="fas fa-trophy"></i>
+					<h3>Турниры</h3>
+					<p>Соревнуйся в Case Battles за топ скины</p>
+				</div>
+			</section>
+		</main>
+
+		<footer>
+			<div class="footer-content">
+				<p>© 2025 GLDROP - All rights reserved | <a href="#">Политика Конфиденциальности</a></p>
+			</div>
+		</footer>
+
+		<script src="./scripts/language.js"></script>
+		<script src="./scripts/to-user.js"></script>
+		<script src="./scripts/to-cases.js"></script>
+
+		<script>
+			// === ЗАГРУЗКА КЕЙСОВ ===
+    toCases(cases => {
+        const container = document.querySelector('.container');
+        if (!container) return;
+        container.innerHTML = '';
+        if (Array.isArray(cases)) {
+            cases.forEach(_case => {
+                const caseElement = document.createElement('div');
+                caseElement.classList.add('cases');
+                caseElement.setAttribute('data-case-id', _case.id);
+                caseElement.style.animationDelay = `${Math.random() * 0.5}s`;
+
+                const caseWrapper = document.createElement('div');
+                caseWrapper.classList.add('case-wrapper');
+                caseWrapper.innerHTML = `
+                    <div class="case-image simple-case-image">
+                        <img src="${_case.image}" alt="${_case.name}" />
+                        <div class="case-glow"></div>
+                    </div>
+                    <h2>${_case.name}</h2>
+                    <h3>${_case.price}₽ <i class="fas fa-fire price-icon"></i></h3>
+                `;
+
+                const caseLink = document.createElement('a');
+                caseLink.href = `case.html?id=${_case.id}`;
+                caseLink.style.textDecoration = 'none';
+                caseLink.appendChild(caseWrapper);
+
+                caseElement.appendChild(caseLink);
+                container.appendChild(caseElement);
+            });
+        }
+    });
+
+    // === АВТОРИЗАЦИЯ ===
+    toUser(toUserProfileUI);
+
+    // === ПЛЮСИК → deposit.html ===
+    document.addEventListener('click', e => {
+        if (e.target.closest('#depositPlusButton')) {
+            e.preventDefault();
+            const sessionId = localStorage.getItem('sessionid');
+            if (!sessionId) {
+                alert('Пожалуйста, авторизуйтесь.');
+                return;
+            }
+            localStorage.setItem('returnAfterPayment', 'index.html');
+            window.location.href = 'deposit.html';
+        }
+    });
+
+    // === РЕДИРЕКТ ПОСЛЕ ЛОГИНА ===
+    document.addEventListener('DOMContentLoaded', () => {
+        const redirectTo = localStorage.getItem('login_redirect');
+        if (redirectTo && redirectTo.includes('case.html')) {
+            localStorage.removeItem('login_redirect');
+            window.location.href = redirectTo;
+        }
+    });
+
+    // === ВЫХОД ТОЛЬКО ПО КНОПКЕ ===
+    document.getElementById('logoutButton')?.addEventListener('click', () => {
+        localStorage.removeItem('sessionid');
+        localStorage.removeItem('login_redirect');
+        window.location.reload();
+    });
+		</script>
+	</body>
+</html>

@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ru">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>User Inventory</title>
+		<link rel="stylesheet" href="styles/user-style.css" />
+		<link rel="stylesheet" href="css/global.css">
+		<link rel="icon" href="logo.png" type="image/png" />
+		<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+		<style>
+			/* === ОСНОВНЫЕ СТИЛИ === */
+			.disabled-button {
+				background-color: #888 !important;
+				cursor: not-allowed !important;
+				opacity: 0.7 !important;
+			}
+			.item-status {
+				color: #ff9800;
+				font-size: 12px;
+				margin-top: 5px;
+				font-weight: bold;
+			}
+			.sell-all-button {
+				background-color: #ff4444;
+				color: white;
+				border: none;
+				padding: 10px 20px;
+				cursor: pointer;
+				font-size: 14px;
+				border-radius: 5px;
+				margin: 10px 0;
+				width: 100%;
+				font-weight: bold;
+			}
+			.sell-all-button:hover { background-color: #cc0000; }
+			.sell-all-button:disabled { background-color: #888; cursor: not-allowed; opacity: 0.7; }
+			.show-more { display: flex; justify-content: center; margin: 20px 0; }
+			#show-more-btn {
+				padding: 10px 20px; background-color: #ff9800; color: #fff; border: none;
+				border-radius: 5px; font-size: 14px; cursor: pointer; font-weight: bold;
+			}
+			#show-more-btn:hover { background-color: #e68900; }
+
+			/* === МОДАЛКИ — СТИЛЬНЫЕ ПРЕДМЕТЫ === */
+			.win-item-container {
+				background: rgba(205,127,50,0.1);
+				border: 1px solid rgba(205,127,50,0.3);
+				border-radius: 16px;
+				padding: 20px;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 15px;
+				margin: 0 auto 20px;
+			}
+			.win-item-image-container {
+				width: 140px; height: 140px;
+				background: rgba(205,127,50,0.15);
+				border: 2px solid #cd7f32;
+				border-radius: 16px;
+				overflow: hidden;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+			.win-item-image { max-width: 90%; max-height: 90%; object-fit: contain; }
+			.win-item-name { font-size: 1.25rem; font-weight: 700; color: #e8eaed; text-align: center; }
+
+			/* === СТИЛЬНЫЕ УВЕДОМЛЕНИЯ (GLASSMORPHISM) === */
+			.notification-container {
+				position: fixed;
+				top: 20px;
+				right: 20px;
+				z-index: 9999;
+				display: flex;
+				flex-direction: column;
+				gap: 12px;
+				pointer-events: none;
+				font-family: 'Orbitron', sans-serif;
+			}
+
+			.notification {
+				background: rgba(19, 22, 26, 0.88);
+				backdrop-filter: blur(12px);
+				-webkit-backdrop-filter: blur(12px);
+				border: 1px solid rgba(205, 127, 50, 0.3);
+				border-left: 4px solid #cd7f32;
+				border-radius: 16px;
+				padding: 18px 22px;
+				min-width: 320px;
+				max-width: 400px;
+				box-shadow: 
+					0 8px 32px rgba(0, 0, 0, 0.4),
+					0 0 20px rgba(205, 127, 50, 0.15);
+				display: flex;
+				align-items: center;
+				gap: 14px;
+				pointer-events: auto;
+				color: #e8eaed;
+				font-size: 0.95rem;
+				font-weight: 600;
+				opacity: 0;
+				transform: translateX(120%);
+				transition: all 0.4s ease-out;
+			}
+
+			.notification.show {
+				opacity: 1;
+				transform: translateX(0);
+			}
+
+			.notification.success {
+				border-left-color: #4caf50;
+				box-shadow: 
+					0 8px 32px rgba(0, 0, 0, 0.4),
+					0 0 20px rgba(76, 175, 80, 0.2);
+			}
+
+			.notification.error {
+				border-left-color: #f44336;
+				box-shadow: 
+					0 8px 32px rgba(0, 0, 0, 0.4),
+					0 0 20px rgba(244, 67, 54, 0.2);
+			}
+
+			.notification-icon {
+				width: 42px;
+				height: 42px;
+				background: rgba(205, 127, 50, 0.15);
+				border: 1px solid rgba(205, 127, 50, 0.4);
+				border-radius: 50%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 1.4rem;
+				font-weight: bold;
+				color: #cd7f32;
+				box-shadow: 0 0 15px rgba(205, 127, 50, 0.3);
+			}
+
+			.notification.success .notification-icon {
+				background: rgba(76, 175, 80, 0.15);
+				border-color: rgba(76, 175, 80, 0.4);
+				color: #4caf50;
+				box-shadow: 0 0 15px rgba(76, 175, 80, 0.3);
+			}
+
+			.notification.error .notification-icon {
+				background: rgba(244, 67, 54, 0.15);
+				border-color: rgba(244, 67, 54, 0.4);
+				color: #f44336;
+				box-shadow: 0 0 15px rgba(244, 67, 54, 0.3);
+			}
+
+			.notification-text {
+				flex: 1;
+				line-height: 1.4;
+			}
+
+			.notification-progress {
+				position: absolute;
+				bottom: 0;
+				left: 0;
+				height: 3px;
+				background: linear-gradient(90deg, #cd7f32, #e69a50);
+				width: 100%;
+				animation: progressBar 3s linear forwards;
+			}
+
+			@keyframes progressBar {
+				from { width: 100%; }
+				to { width: 0%; }
+			}
+		</style>
+	</head>
+	<body>
+		<div class="main-container">
+			<!-- === ЗАГОЛОВОК === -->
+			<div class="header-section">
+				<div class="user-info">
+					<div class="avatar-container">
+						<img id="user-avatar" src="" alt="User Avatar" />
+					</div>
+					<div class="user-details">
+						<div class="nickname" id="user-nickname"></div>
+						<div class="balance-container">
+							<div class="balance-icon">₽</div>
+							<div class="balance" id="user-balance">0.00</div>
+							<button class="deposit-button" id="depositButton">ПОПОЛНИТЬ</button>
+						</div>
+					</div>
+				</div>
+				<div class="action-buttons">
+					<a href="index.html" class="back-button">К ОСНОВНОМУ</a>
+				</div>
+			</div>
+
+			<!-- === ВКЛАДКИ === -->
+			<div class="nav-tabs">
+				<div class="tab active">
+					<img src="weapons.png" alt="Inventory" class="tab-icon" />
+					<span>ПРЕДМЕТЫ</span>
+					<span class="item-count" id="inventory-count">0</span>
+				</div>
+				<div class="tab">
+					<img src="contacts-icon.png" alt="Contacts" class="tab-icon" />
+					<span>КОНТАКТЫ</span>
+					<span class="item-count">0</span>
+				</div>
+				<div class="tab">
+					<img src="upgrades-icon.png" alt="Upgrades" class="tab-icon" />
+					<span>АПГРЕЙДЫ</span>
+					<span class="item-count">0</span>
+				</div>
+				<div class="tab">
+					<img src="battles-icon.png" alt="Battles" class="tab-icon" />
+					<span>БИТВЫ</span>
+					<span class="item-count">0</span>
+				</div>
+			</div>
+
+			<!-- === КНОПКА ПРОДАТЬ ВСЁ === -->
+			<button class="sell-all-button" id="sellAllButton">ПРОДАТЬ ВСЕ</button>
+
+			<!-- === ИНВЕНТАРЬ === -->
+			<div class="inventory-container" id="inventory-grid"></div>
+
+			<!-- === ПОКАЗАТЬ ЕЩЁ === -->
+			<div class="show-more">
+				<button id="show-more-btn">ПОКАЗАТЬ ЕЩЁ</button>
+			</div>
+
+			<!-- === ШАБЛОН ПРЕДМЕТА === -->
+			<template id="item-template">
+				<div class="inventory-item">
+					<div class="item-image-container">
+						<img class="item-image" src="" alt="Item" />
+					</div>
+					<div class="item-details">
+						<div class="item-type"></div>
+						<div class="item-name"></div>
+					</div>
+					<div class="item-actions">
+						<button class="sell-button">ПРОДАТЬ</button>
+						<button class="withdraw-button">ВЫВЕСТИ</button>
+					</div>
+				</div>
+			</template>
+
+			<!-- === КОНТЕЙНЕР УВЕДОМЛЕНИЙ === -->
+			<div class="notification-container" id="notifications"></div>
+		</div>
+
+		<script src="./scripts/to-user.js"></script>
+<script>
+    let sessionHeader = null;
+    let currentUser = null;
+    let fullInventory = [];
+    let currentOffset = 0;
+    const PAGE_SIZE = 10;
+
+    // Защита от множественных действий
+    const sellingInProgress = new Set();      // продажа
+    const withdrawingInProgress = new Set();  // вывод
+
+    emailjs.init('HLh4JDrHr7uqSwe8J');
+
+    // === ЦЕНЫ ИЗ КЕЙСА ===
+    const CASE_PRICES_JSON = localStorage.getItem('CASE_ITEM_PRICES');
+    const CASE_PRICES = CASE_PRICES_JSON ? JSON.parse(CASE_PRICES_JSON) : {};
+    function getItemPrice(name) { return CASE_PRICES[name] || 0; }
+    function getRarityClass(p) {
+        if (p >= 5000) return '#ff4444';
+        if (p >= 1000) return '#9c27b0';
+        if (p >= 500) return '#2196f3';
+        return '#cd7f32';
+    }
+
+    // === УТИЛИТЫ ===
+    function isWithdrawn(id) { return localStorage.getItem(`withdrawn_${id}`) === 'true'; }
+    function markWithdrawn(id) { localStorage.setItem(`withdrawn_${id}`, 'true'); }
+    function normalizeNumber(v) {
+        if (v == null) return 0;
+        if (typeof v === 'number') return isFinite(v) ? v : 0;
+        if (typeof v === 'string') {
+            const p = parseFloat(v.trim().replace(/[^0-9.-]/g, '').replace(',', '.'));
+            return isNaN(p) ? 0 : p;
+        }
+        return 0;
+    }
+
+    // === УВЕДОМЛЕНИЯ ===
+    function showNotification(msg, type = 'success') {
+        const container = document.getElementById('notifications');
+        if (!container) return console.error('Нет #notifications');
+
+        const notif = document.createElement('div');
+        notif.className = `notification ${type}`;
+        notif.innerHTML = `
+            <div class="notification-icon">
+                ${type === 'success' ? '✓' : '✗'}
+            </div>
+            <div class="notification-text">${msg}</div>
+            <div class="notification-progress"></div>
+        `;
+
+        container.appendChild(notif);
+        requestAnimationFrame(() => notif.classList.add('show'));
+
+        const remove = () => {
+            notif.classList.remove('show');
+            setTimeout(() => notif.remove(), 400);
+        };
+
+        const timeout = setTimeout(remove, 3000);
+        notif.onclick = () => { clearTimeout(timeout); remove(); };
+    }
+
+    // === АВТОРИЗАЦИЯ ===
+    toUser((user, sessionId) => {
+        sessionHeader = sessionId;
+        if (!user) return;
+        const u = Array.isArray(user) ? user[0] : user;
+        currentUser = u.username || u.nickname;
+        document.getElementById('user-avatar').src = u.avatar_url || '';
+        document.getElementById('user-nickname').textContent = u.nickname || 'User';
+        document.getElementById('user-balance').textContent = normalizeNumber(u.balance).toFixed(2);
+        fullInventory = u.inventory || [];
+
+        fullInventory.forEach(inv => {
+            const realPrice = getItemPrice(inv.item.name);
+            if (realPrice > 0) inv.price = realPrice;
+        });
+
+        document.getElementById('inventory-count').textContent = fullInventory.length;
+        currentOffset = 0;
+        populateInventory();
+    });
+
+    // === ОТРИСОВКА ИНВЕНТАРЯ ===
+    function populateInventory() {
+        const grid = document.getElementById('inventory-grid');
+        const tmpl = document.getElementById('item-template');
+        const sorted = [...fullInventory].sort((a, b) => {
+            const aDone = a.status === 'продан' || a.status === 'выведен' || isWithdrawn(a.id);
+            const bDone = b.status === 'продан' || b.status === 'выведен' || isWithdrawn(b.id);
+            if (aDone !== bDone) return aDone ? 1 : -1;
+            return b.id - a.id;
+        });
+
+        const start = currentOffset, end = start + PAGE_SIZE;
+        const page = sorted.slice(start, end);
+        if (start === 0) grid.innerHTML = '';
+
+        page.forEach(inv => {
+            const item = inv.item;
+            const price = inv.price || getItemPrice(item.name);
+            const id = inv.id;
+            const status = inv.status;
+
+            const el = tmpl.content.cloneNode(true);
+            const div = el.querySelector('.inventory-item');
+            div.dataset.itemId = id;
+
+            const img = el.querySelector('.item-image');
+            const imgUrl = item.item_image?.[0]?.image || 'default-weapon.png';
+            img.src = imgUrl.includes('http') ? imgUrl : `https://jackhanmacsgolkgame.pythonanywhere.com${imgUrl}`;
+
+            el.querySelector('.item-type').textContent = 'Оружие:';
+            el.querySelector('.item-name').textContent = item.name;
+
+            const priceEl = document.createElement('div');
+            priceEl.className = 'item-price';
+            priceEl.textContent = `${price.toFixed(2)}₽`;
+            priceEl.style.color = getRarityClass(price);
+            el.querySelector('.item-details').appendChild(priceEl);
+
+            const sellBtn = el.querySelector('.sell-button');
+            const withdrawBtn = el.querySelector('.withdraw-button');
+
+            const isSold = status === 'продан';
+            const isWithdrawnItem = status === 'выведен' || isWithdrawn(id);
+            const isSelling = sellingInProgress.has(id);
+            const isWithdrawing = withdrawingInProgress.has(id);
+
+            if (isSold || isWithdrawnItem || isSelling || isWithdrawing) {
+                sellBtn.disabled = true;
+                sellBtn.classList.add('disabled-button');
+
+                withdrawBtn.disabled = true;
+                withdrawBtn.classList.add('disabled-button');
+
+                if (isSelling) {
+                    sellBtn.textContent = 'ПРОДАЁТСЯ...';
+                } else if (isSold) {
+                    sellBtn.textContent = 'ПРОДАНО';
+                } else {
+                    sellBtn.textContent = 'ПРОДАТЬ';
+                }
+
+                if (isWithdrawing) {
+                    withdrawBtn.textContent = 'ВЫВОДИТСЯ...';
+                } else if (isWithdrawnItem) {
+                    withdrawBtn.textContent = 'ВЫВЕДЕНО';
+                } else {
+                    withdrawBtn.textContent = 'ВЫВЕСТИ';
+                }
+
+                if (isSelling || isWithdrawing) {
+                    const statusDiv = document.createElement('div');
+                    statusDiv.className = 'item-status';
+                    statusDiv.textContent = isSelling ? 'продаётся' : 'выводится';
+                    el.querySelector('.item-details').appendChild(statusDiv);
+                }
+            } else {
+                sellBtn.dataset.itemId = id;
+                sellBtn.dataset.img = img.src;
+                sellBtn.dataset.name = item.name;
+                sellBtn.dataset.price = price;
+                sellBtn.addEventListener('click', e => {
+                    const b = e.target;
+                    showSellModal(b.dataset.itemId, b.dataset.name, parseFloat(b.dataset.price), b.dataset.img);
+                });
+
+                withdrawBtn.dataset.itemId = id;
+                withdrawBtn.dataset.img = img.src;
+                withdrawBtn.dataset.name = item.name;
+                withdrawBtn.dataset.price = price;
+                withdrawBtn.addEventListener('click', e => {
+                    const b = e.target;
+                    showWithdrawModal(b.dataset.itemId, b.dataset.name, parseFloat(b.dataset.price), b.dataset.img);
+                });
+            }
+
+            grid.appendChild(el);
+        });
+
+        if (start === 0 && sorted.length === 0) {
+            const msg = document.createElement('div');
+            msg.className = 'empty-inventory';
+            msg.textContent = 'У вас пока нет предметов в инвентаре';
+            grid.appendChild(msg);
+        }
+
+        const showMore = document.querySelector('.show-more');
+        showMore.style.display = end >= sorted.length ? 'none' : 'block';
+        updateSellAllButton();
+    }
+
+    // === МОДАЛКА ПРОДАЖИ ===
+    function showSellModal(id, name, price, img) {
+        if (sellingInProgress.has(id) || withdrawingInProgress.has(id)) {
+            showNotification('С предметом уже выполняются действия', 'error');
+            return;
+        }
+
+        const modal = document.createElement('div');
+        modal.className = 'modal show';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">ПРОДАТЬ ПРЕДМЕТ</h2>
+                    <button class="close-button" onclick="this.closest('.modal').remove()">X</button>
+                </div>
+                <div class="modal-body">
+                    <div class="win-item-container">
+                        <div class="win-item-image-container">
+                            <img src="${img}" class="win-item-image" />
+                        </div>
+                        <div class="win-item-details">
+                            <div class="win-item-name">${name}</div>
+                            <div class="item-price" style="color: ${getRarityClass(price)}; font-weight: 700; font-size: 1.3rem;">
+                                ${price.toFixed(2)}₽
+                            </div>
+                        </div>
+                    </div>
+                    <p style="text-align: center; color: #aaa; margin: 15px 0;">
+                        Вы получите <strong style="color: #cd7f32;">${price.toFixed(2)}₽</strong>
+                    </p>
+                    <button class="button submit-button" id="confirmSell">ПРОДАТЬ</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        const confirmBtn = document.getElementById('confirmSell');
+
+        sellingInProgress.add(id);
+
+        // блокируем кнопку продажи в списке
+        const listSellBtn = document.querySelector(`.sell-button[data-item-id="${id}"]`);
+        if (listSellBtn) {
+            listSellBtn.disabled = true;
+            listSellBtn.textContent = 'ПРОДАЁТСЯ...';
+            listSellBtn.classList.add('disabled-button');
+        }
+
+        confirmBtn.onclick = () => {
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'ПРОДАЁТСЯ...';
+            confirmBtn.classList.add('disabled-button');
+
+            fetch(`https://jackhanmacsgolkgame.pythonanywhere.com/items/${id}/sell/`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', ...sessionHeader },
+                body: JSON.stringify({})
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('Ошибка сервера');
+                return r.json();
+            })
+            .then(data => {
+                showNotification(`"${name}" продан за ${price.toFixed(2)}₽!`, 'success');
+                document.getElementById('user-balance').textContent = normalizeNumber(data.balance).toFixed(2);
+                
+                const idx = fullInventory.findIndex(i => i.id == id);
+                if (idx !== -1) fullInventory[idx].status = 'продан';
+                
+                modal.remove();
+                currentOffset = 0;
+                populateInventory();
+            })
+            .catch(() => {
+                showNotification('Не удалось продать предмет', 'error');
+                if (listSellBtn) {
+                    listSellBtn.disabled = false;
+                    listSellBtn.textContent = 'ПРОДАТЬ';
+                    listSellBtn.classList.remove('disabled-button');
+                }
+            })
+            .finally(() => {
+                sellingInProgress.delete(id);
+                if (modal && modal.parentNode) modal.remove();
+            });
+        };
+    }
+
+    // === МОДАЛКА ВЫВОДА ===
+    function showWithdrawModal(id, name, price, img) {
+        if (sellingInProgress.has(id) || withdrawingInProgress.has(id)) {
+            showNotification('С предметом уже выполняются действия', 'error');
+            return;
+        }
+
+        const modal = document.createElement('div');
+        modal.className = 'modal show';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">ВЫВОД ПРЕДМЕТА</h2>
+                    <button class="close-button" onclick="this.closest('.modal').remove()">X</button>
+                </div>
+                <div class="modal-body">
+                    <div class="win-item-container">
+                        <div class="win-item-image-container">
+                            <img src="${img}" class="win-item-image" />
+                        </div>
+                        <div class="win-item-details">
+                            <div class="win-item-name">${name}</div>
+                            <div class="item-price" style="color: #aaa; font-size: 1rem;">
+                                Стоимость: ${price.toFixed(2)}₽
+                            </div>
+                        </div>
+                    </div>
+                    <form id="tradeForm">
+                        <div class="form-group">
+                            <label>Steam Trade URL:</label>
+                            <input type="url" id="tradeUrl" required />
+                            <div id="tradeError" class="error-message"></div>
+                        </div>
+                        <button type="submit" class="button submit-button" id="submitWithdraw">ОТПРАВИТЬ</button>
+                    </form>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        withdrawingInProgress.add(id);
+
+        // блокируем кнопку вывода в списке сразу
+        const listWithdrawBtn = document.querySelector(`.withdraw-button[data-item-id="${id}"]`);
+        if (listWithdrawBtn) {
+            listWithdrawBtn.disabled = true;
+            listWithdrawBtn.textContent = 'ВЫВОДИТСЯ...';
+            listWithdrawBtn.classList.add('disabled-button');
+        }
+
+        const form = document.getElementById('tradeForm');
+        const submitBtn = document.getElementById('submitWithdraw');
+
+        form.onsubmit = async e => {
+            e.preventDefault();
+
+            const url = document.getElementById('tradeUrl').value.trim();
+            const pattern = /^https:\/\/steamcommunity\.com\/tradeoffer\/new\/\?partner=\d+&token=[A-Za-z0-9_-]+$/;
+
+            if (!pattern.test(url)) {
+                document.getElementById('tradeError').textContent = 'Некорректный URL';
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'ОТПРАВЛЯЕТСЯ...';
+            submitBtn.classList.add('disabled-button');
+
+            try {
+                await emailjs.send('service_jz0xgdf', 'template_o7emg3h', { 
+                    username: currentUser, 
+                    item_name: name, 
+                    trade_url: url 
+                });
+
+                showNotification(`Заявка на вывод "${name}" отправлена!`, 'success');
+                markWithdrawn(id);
+                const idx = fullInventory.findIndex(i => i.id == id);
+                if (idx !== -1) fullInventory[idx].status = 'выведен';
+
+                modal.remove();
+                currentOffset = 0;
+                populateInventory();
+            } catch (err) {
+                console.error(err);
+                showNotification('Ошибка отправки заявки', 'error');
+
+                if (listWithdrawBtn) {
+                    listWithdrawBtn.disabled = false;
+                    listWithdrawBtn.textContent = 'ВЫВЕСТИ';
+                    listWithdrawBtn.classList.remove('disabled-button');
+                }
+            } finally {
+                withdrawingInProgress.delete(id);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'ОТПРАВИТЬ';
+                submitBtn.classList.remove('disabled-button');
+                if (modal && modal.parentNode) modal.remove();
+            }
+        };
+    }
+
+    // === ПРОДАТЬ ВСЁ ===
+    function updateSellAllButton() {
+        const btn = document.getElementById('sellAllButton');
+        const count = fullInventory.filter(i => 
+            !(i.status === 'продан' || i.status === 'выведен' || isWithdrawn(i.id) || 
+              sellingInProgress.has(i.id) || withdrawingInProgress.has(i.id))
+        ).length;
+        btn.disabled = count === 0;
+        btn.textContent = count > 0 ? `ПРОДАТЬ ВСЕ (${count})` : 'ПРОДАТЬ ВСЕ';
+    }
+
+    document.getElementById('sellAllButton').onclick = async () => {
+        const active = fullInventory.filter(i => 
+            !(i.status === 'продан' || i.status === 'выведен' || isWithdrawn(i.id) || 
+              sellingInProgress.has(i.id) || withdrawingInProgress.has(i.id))
+        );
+        if (active.length === 0) return showNotification('Нет доступных предметов', 'error');
+        if (!confirm(`Продать все ${active.length} предметов?`)) return;
+
+        const btn = document.getElementById('sellAllButton');
+        btn.disabled = true;
+        btn.textContent = 'ПРОДАЁТСЯ...';
+
+        let success = 0;
+        let lastBalance = 0;
+
+        for (const item of active) {
+            const id = item.id;
+            const name = item.item.name;
+
+            if (sellingInProgress.has(id)) continue;
+            sellingInProgress.add(id);
+
+            try {
+                const res = await fetch(`https://jackhanmacsgolkgame.pythonanywhere.com/items/${id}/sell/`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', ...sessionHeader },
+                    body: '{}'
+                });
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+                success++;
+                lastBalance = normalizeNumber(data.balance);
+                const idx = fullInventory.findIndex(i => i.id == id);
+                if (idx !== -1) fullInventory[idx].status = 'продан';
+            } catch {
+                // silent fail for batch
+            } finally {
+                sellingInProgress.delete(id);
+            }
+        }
+
+        if (success > 0) {
+            document.getElementById('user-balance').textContent = lastBalance.toFixed(2);
+            showNotification(`Продано ${success} из ${active.length}`, 'success');
+        } else {
+            showNotification('Не удалось ничего продать', 'error');
+        }
+
+        currentOffset = 0;
+        populateInventory();
+        btn.disabled = false;
+        updateSellAllButton();
+    };
+
+    document.getElementById('show-more-btn').onclick = () => { 
+        currentOffset += PAGE_SIZE; 
+        populateInventory(); 
+    };
+
+    document.getElementById('depositButton').onclick = () => { 
+        window.location.href = 'deposit.html'; 
+    };
+
+    window.addEventListener('load', () => {
+        const p = new URLSearchParams(window.location.search);
+        const ret = sessionStorage.getItem('returnAfterPayment') || 'index.html';
+        if (p.get('payment') === 'success') {
+            fetch('https://jackhanmacsgolkgame.pythonanywhere.com/user/', { headers: sessionHeader })
+                .then(r => r.json())
+                .then(d => {
+                    document.getElementById('user-balance').textContent = normalizeNumber(d.balance).toFixed(2);
+                    showNotification('Баланс пополнен!', 'success');
+                });
+            history.replaceState({}, '', ret);
+            sessionStorage.removeItem('returnAfterPayment');
+        }
+    });
+		</script>
+	</body>
+</html>

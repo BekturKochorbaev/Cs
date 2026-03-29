@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Inventory</title>
+    <link rel="stylesheet" href="styles/user-style.css" />
+    <link rel="icon" href="logo.png" type="image/png" />
+</head>
+<body>
+<div class="main-container">
+    <div class="header-section">
+        <div class="user-info">
+            <div class="avatar-container">
+                <img id="user-avatar" src="" alt="User Avatar" />
+            </div>
+            <div class="user-details">
+                <div class="nickname" id="user-nickname"></div>
+                <div class="balance-container">
+                    <div class="balance-icon">₽</div>
+                    <div class="balance" id="user-balance">0.00</div>
+                    <button class="deposit-button" id="depositButton">ПОПОЛНИТЬ</button>
+                </div>
+            </div>
+        </div>
+        <div class="action-buttons">
+            <a href="index.html" class="back-button">К ОСНОВНОМУ</a>
+        </div>
+    </div>
+
+    <!-- Навигация и инвентарь опущены для краткости -->
+
+    <!-- Модальное окно для пополнения -->
+    <div class="modal" id="depositModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Пополнить баланс</h2>
+                <button class="close-button" id="closeDepositModal">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="depositForm">
+                    <div class="form-group">
+                        <label for="depositAmount">Сумма (₽):</label>
+                        <input
+                            type="number"
+                            id="depositAmount"
+                            name="amount"
+                            min="100"
+                            step="1"
+                            placeholder="Введите сумму"
+                            required
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label for="paymentMethod">Способ оплаты:</label>
+                        <select id="paymentMethod" name="payment_method" required>
+                            <option value="card">Банковская карта</option>
+                            <option value="sbp">СБП (Система быстрых платежей)</option>
+                            <option value="yoomoney">ЮMoney</option>
+                            <option value="qiwi">QIWI</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="button submit-button">Пополнить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="./scripts/to-user.js"></script>
+<script>
+let sessionHeader = null;
+
+function normalizeNumber(value) {
+    if (value == null) return 0;
+    if (typeof value === 'number') return isFinite(value) ? value : 0;
+    if (typeof value === 'string') {
+        const cleaned = value.trim().replace(/[^0-9.-]/g, '').replace(',', '.');
+        const parsed = parseFloat(cleaned);
+        return isNaN(parsed) || !isFinite(parsed) ? 0 : parsed;
+    }
+    return 0;
+}
+
+// Получаем данные пользователя
+toUser((user, sessionId) => {
+    sessionHeader = sessionId;
+    if (user) {
+        const userData = Array.isArray(user) ? user[0] : user;
+        document.getElementById('user-avatar').src = userData.avatar_url || '';
+        document.getElementById('user-nickname').textContent = userData.nickname || 'User';
+        document.getElementById('user-balance').textContent = normalizeNumber(userData.balance).toFixed(2);
+    }
+});
+
+// Логика открытия и закрытия модального окна
+const depositButton = document.getElementById('depositButton');
+const depositModal = document.getElementById('depositModal');
+const closeDepositModal = document.getElementById('closeDepositModal');
+const depositForm = document.getElementById('depositForm');
+
+depositButton.addEventListener('click', () => {
+    if (!sessionHeader) {
+        alert('Пожалуйста, авторизуйтесь для пополнения баланса.');
+        return;
+    }
+    depositModal.classList.add('show');
+});
+
+closeDepositModal.addEventListener('click', () => {
+    depositModal.classList.remove('show');
+    depositForm.reset();
+});
+
+// Отправка запроса на создание депозита
+depositForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const amount = normalizeNumber(document.getElementById('depositAmount').value);
+    const paymentMethod = document.getElementById('paymentMethod').value;
+
+    if (amount < 100) {
+        alert('Минимальная сумма пополнения — 100₽.');
+        return;
+    }
+
+    if (!sessionHeader) {
+        alert('Ошибка авторизации. Пожалуйста, перезагрузите страницу.');
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            'https://jackhanmacsgolkgame.pythonanywhere.com/ru/payments/deposits/',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...sessionHeader
+                },
+                body: JSON.stringify({
+                    amount: amount,
+                    payment_method: paymentMethod
+                })
+            }
+        );
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Ошибка при создании платежа');
+        }
+
+        if (data.confirmation_url) {
+            window.location.href = data.confirmation_url;
+        } else {
+            throw new Error('Не получен URL для оплаты');
+        }
+    } catch (error) {
+        console.error('Ошибка пополнения:', error);
+        alert('Не удалось инициировать пополнение. Попробуйте снова.');
+    }
+});
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+models.py выглядит таким образом from django.db import models
+from django.contrib.auth.models import AbstractUser
+
+
+class User(AbstractUser):
+    steam_id = models.CharField(max_length=255, unique=True, null=True, blank=True, verbose_name='Steam ID')
+    nickname = models.CharField(max_length=255, null=True, blank=True, verbose_name='Никнейм')
+    avatar_url = models.URLField(null=True, blank=True, verbose_name='URL аватара')
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Баланс')
+    password = models.CharField(max_length=128, blank=True, verbose_name='password')
+
+    def __str__(self):
+        return str(self.nickname)
+
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+
+
+class Item(models.Model):
+    name = models.CharField(max_length=100, verbose_name='Название')
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена')
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = 'Предмет'
+        verbose_name_plural = 'Предметы'
+
+
+class ItemImage(models.Model):
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='item_image')
+    image = models.FileField(upload_to='item-image/',  verbose_name='Изображение' )
+
+    class Meta:
+        verbose_name = 'Изображение'
+        verbose_name_plural = 'Изображение'
+
+
+class Case(models.Model):
+    name = models.CharField(max_length=100, verbose_name='Название')
+    image = models.FileField(upload_to='case-image/', verbose_name='Изображение')
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена')
+    active = models.BooleanField(default=True, verbose_name='Активен')
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = 'Кейс'
+        verbose_name_plural = 'Кейсы'
+
+
+class CaseItemChance(models.Model):
+    case = models.ForeignKey(Case, related_name='items', on_delete=models.CASCADE, verbose_name='Кейс')
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, verbose_name='Предмет')
+    chance = models.FloatField(default=0.0, verbose_name='Шанс выпадения (%)')  # Добавлено поле
+
+    def __str__(self):
+        return f'{self.item.name} - {self.case.name}'
+
+    class Meta:
+        verbose_name = 'Предмет в кейсе'
+        verbose_name_plural = 'Предметы в кейсе'
+
+
+class ItemInstance(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='inventory', verbose_name='Пользователь')
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, verbose_name='Предмет')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата получения')
+    for_sale = models.BooleanField(default=False)
+    sold = models.BooleanField(default=False)
+    custom_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    status = models.CharField(max_length=52, choices=[(1, 'в продаже')], null=True, blank=True)
+
+    def __str__(self):
+        return f'{self.item.name}'
+
+    class Meta:
+        verbose_name = 'Полученный предмет'
+        verbose_name_plural = 'Полученные предметы'
+
+
+views.py
+import random
+
+from django.db import transaction
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import viewsets, status, permissions, generics
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from .models import Case, ItemInstance, CaseItemChance
+from .serializers import CaseSerializer, ItemInstanceSerializer, UserSerializer, CaseDetailSerializer, \
+ItemInstanceSaleSerializer
+from django.shortcuts import redirect
+from urllib.parse import urlencode, urlparse
+from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+from django.contrib.auth import login
+from django.http import HttpResponseBadRequest, HttpResponseRedirect
+from django.views import View
+import requests
+from .auth import CsrfExemptSessionAuthentication
+
+User = get_user_model()
+
+STEAM_OPENID_URL = "https://steamcommunity.com/openid/login"
+
+class SteamLoginView(View):
+    def get(self, request):
+        params = {
+            "openid.ns": "http://specs.openid.net/auth/2.0",
+            "openid.mode": "checkid_setup",
+            "openid.return_to": request.build_absolute_uri('/steam/callback/'),
+            "openid.realm": request.build_absolute_uri('/'),
+            "openid.identity": "http://specs.openid.net/auth/2.0/identifier_select",
+            "openid.claimed_id": "http://specs.openid.net/auth/2.0/identifier_select",
+        }
+        return redirect(f"{STEAM_OPENID_URL}?{urlencode(params)}")
+
+
+class SteamCallbackView(View):
+    def get(self, request):
+        # Получаем данные о пользователе через OpenID
+        claimed_id = request.GET.get("openid.claimed_id")
+        if not claimed_id or "steamcommunity.com/openid/id/" not in claimed_id:
+            return HttpResponseBadRequest("Invalid Steam response")
+
+        steam_id = claimed_id.split("/")[-1]
+
+        # Запрос к Steam API для получения информации о пользователе
+        steam_api_url = f"http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=04908ECF4DEC5452AD1103D6F7A5714C&steamids={steam_id}"
+        response = requests.get(steam_api_url)
+        data = response.json()
+
+        player_data = data.get("response", {}).get("players", [{}])[0]
+        nickname = player_data.get("personaname", "")
+        avatar_url = player_data.get("avatarfull", "")
+
+        user, created = User.objects.get_or_create(username=f"steam_{steam_id}")
+
+        if created:
+            user.steam_id = steam_id
+            user.nickname = nickname
+            user.avatar_url = avatar_url
+            user.save()
+
+        login(request, user)
+
+        # Получаем текущий session_key
+        session_key = request.session.session_key
+        if not session_key:
+            request.session.save()  # иногда session_key ещё не создан → форсируем создание
+            session_key = request.session.session_key
+
+        # Добавляем session_key в redirect URL
+        redirect_url = f"http://127.0.0.1:5500/?session={session_key}"
+
+        return redirect(redirect_url)
+
+
+class CurrentUserView(generics.ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return User.objects.filter(id=self.request.user.id)
+
+
+class CaseListView(generics.ListAPIView):
+    queryset = Case.objects.all()
+    serializer_class = CaseSerializer
+
+
+class CaseDetailView(generics.RetrieveAPIView):
+    queryset = Case.objects.all()
+    serializer_class = CaseDetailSerializer
+
+
+class CaseOpenView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, case_id):
+        try:
+            case = Case.objects.get(id=case_id, active=True)
+        except Case.DoesNotExist:
+            return Response({"error": "Кейс не найден или неактивен"}, status=status.HTTP_404_NOT_FOUND)
+
+        user = request.user
+
+        if user.balance < case.price:
+            return Response({"error": "Недостаточно средств на балансе"}, status=status.HTTP_400_BAD_REQUEST)
+
+        case_items = CaseItemChance.objects.filter(case=case)
+        if not case_items.exists():
+            return Response({"error": "У этого кейса нет доступных предметов"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Списываем средства
+        user.balance -= case.price
+        user.save()
+
+        # Выбираем предмет по шансам
+        items = list(case_items)
+        weights = [entry.chance for entry in items]
+        selected_entry = random.choices(items, weights=weights, k=1)[0]
+        selected_item = selected_entry.item
+
+        # Создаем экземпляр предмета
+        ItemInstance.objects.create(user=user, item=selected_item)
+
+        # Получаем изображения
+        images = selected_item.item_image.all()
+        image_urls = [request.build_absolute_uri(img.image.url) for img in images]
+
+        return Response({
+            "message": "Поздравляем! Вы получили предмет.",
+            "item": {
+                "id": selected_item.id,
+                "name": selected_item.name,
+                "price": str(selected_item.price),
+                "images": image_urls
+            },
+            "new_balance": str(user.balance)
+        })
+
+
+class SellItemView(generics.UpdateAPIView):
+    queryset = ItemInstance.objects.all()
+    serializer_class = ItemInstanceSaleSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'id'
+
+    def get_queryset(self):
+        return self.queryset.filter(user=self.request.user, for_sale=False, sold=False)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        price = instance.item.price
+
+        user = request.user
+        user.balance += price
+        user.save()
+
+        instance.status = 'продан'
+        instance.save()
+
+        return Response({
+            "message": f"Предмет продан и {price} добавлено на баланс.",
+            "balance": str(user.balance)
+        }, status=status.HTTP_200_OK)
+
+urls.py
+from django.urls import path
+from .views import CurrentUserView, SellItemView, \
+    CaseOpenView, CaseListView, CaseDetailView, SteamLoginView, SteamCallbackView
+
+
+urlpatterns = [
+    path('user/', CurrentUserView.as_view(), name='current_user'),
+    path('cases/', CaseListView.as_view(), name='case-list'),
+    path('cases/<int:pk>/', CaseDetailView.as_view(), name='case-detail'),
+    path('cases/<int:case_id>/open/', CaseOpenView.as_view(), name='open_case'),
+    path('items/<id>/sell/', SellItemView.as_view(), name='open_case'),
+
+    # Авторизация через Steam
+    path("steam/login/", SteamLoginView.as_view(), name="steam_login"),
+    path("steam/callback/", SteamCallbackView.as_view(), name="steam_callback"),
+
+]
+admin.py
+from django.contrib import admin
+from modeltranslation.admin import TranslationAdmin
+from .models import User, Item, Case, CaseItemChance, ItemImage
+
+
+@admin.register(Case)
+class CaseAdmin(TranslationAdmin):
+    list_display = ("name", 'price')
+
+    class Media:
+        js = (
+            'https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js',
+            'https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js',
+            'modeltranslation/js/tabbed_translation_fields.js',
+        )
+        css = {
+            'screen': ('modeltranslation/css/tabbed_translation_fields.css',),
+        }
+
+
+class UserAdmin(admin.ModelAdmin):
+    model = User
+    list_display = ('nickname', 'steam_id')
+
+
+class ItemImageInline(admin.TabularInline):
+    model = ItemImage
+    extra = 2
+
+
+@admin.register(Item)
+class ItemAdmin(TranslationAdmin):
+    inlines = [ItemImageInline]
+    list_display = ('name', 'price')
+
+    class Media:
+        js = (
+            'https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js',
+            'https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js',
+            'modeltranslation/js/tabbed_translation_fields.js',
+        )
+        css = {
+            'screen': ('modeltranslation/css/tabbed_translation_fields.css',),
+        }
+
+
+class CaseItemChanceAdmin(admin.ModelAdmin):
+    model = CaseItemChance
+    list_display = ('case', 'item', 'chance')
+
+
+admin.site.register(CaseItemChance, CaseItemChanceAdmin)
+admin.site.register(User, UserAdmin)
+напиши эти коды полностью только измененные
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>User Inventory</title>
+		<link rel="stylesheet" href="styles/user-style.css" />
+		<link rel="icon" href="logo.png" type="image/png" />
+		<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+		<style>
+			.disabled-button {
+				background-color: #888;
+				cursor: not-allowed;
+				opacity: 0.7;
+			}
+			.item-status {
+				color: #ff9800;
+				font-size: 12px;
+				margin-top: 5px;
+				font-weight: bold;
+			}
+			.modal {
+				display: none;
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background-color: rgba(0, 0, 0, 0.5);
+				z-index: 1000;
+				justify-content: center;
+				align-items: center;
+			}
+			.modal.show {
+				display: flex;
+			}
+			.modal-content {
+				background-color: #1e1e1e;
+				padding: 20px;
+				border-radius: 8px;
+				width: 400px;
+				max-width: 90%;
+				color: #fff;
+				position: relative;
+			}
+			.modal-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 20px;
+			}
+			.modal-title {
+				font-size: 20px;
+				font-weight: bold;
+			}
+			.close-button {
+				background: none;
+				border: none;
+				color: #fff;
+				font-size: 20px;
+				cursor: pointer;
+			}
+			.form-group {
+				margin-bottom: 15px;
+			}
+			.form-group label {
+				display: block;
+				margin-bottom: 5px;
+				font-size: 14px;
+			}
+			.form-group input,
+			.form-group select {
+				width: 100%;
+				padding: 10px;
+				border-radius: 4px;
+				border: 1px solid #444;
+				background-color: #2a2a2a;
+				color: #fff;
+				font-size: 14px;
+			}
+			.submit-button {
+				width: 100%;
+				padding: 10px;
+				background-color: #ff9800;
+				border: none;
+				border-radius: 4px;
+				color: #fff;
+				font-size: 16px;
+				cursor: pointer;
+			}
+			.submit-button:hover {
+				background-color: #e68900;
+			}
+			.submit-button:disabled {
+				background-color: #888;
+				cursor: not-allowed;
+			}
+			.withdraw-button {
+				width: 100%;
+				background-color: #f3a45d;
+				color: #1c1a24;
+				border: none;
+				border-radius: 5px;
+				padding: 8px 0;
+				font-size: 14px;
+				cursor: pointer;
+				font-weight: bold;
+				margin-top: 10px;
+				transition: all 0.3s;
+			}
+			.withdraw-button:hover {
+				background-color: #f7bf8c;
+			}
+			.withdraw-button:disabled {
+				background-color: #888;
+				cursor: not-allowed;
+				opacity: 0.7;
+			}
+			.error-message {
+				color: #ff4444;
+				font-size: 12px;
+				margin-top: 5px;
+			}
+			.sell-all-button {
+				background-color: #ff4444;
+				color: white;
+				border: none;
+				padding: 10px 20px;
+				cursor: pointer;
+				font-size: 14px;
+				border-radius: 5px;
+				margin: 10px 0;
+				width: 100%;
+				font-weight: bold;
+			}
+			.sell-all-button:hover {
+				background-color: #cc0000;
+			}
+			.sell-all-button:disabled {
+				background-color: #888;
+				cursor: not-allowed;
+				opacity: 0.7;
+			}
+			.show-more {
+				display: flex;
+				justify-content: center;
+				margin-top: 20px;
+				margin-bottom: 20px;
+			}
+			#show-more-btn {
+				padding: 10px 20px;
+				background-color: #ff9800;
+				color: #fff;
+				border: none;
+				border-radius: 5px;
+				font-size: 14px;
+				cursor: pointer;
+				font-weight: bold;
+				display: block;
+				margin: 0 auto;
+			}
+			#show-more-btn:hover {
+				background-color: #e68900;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="main-container">
+			<div class="header-section">
+				<div class="user-info">
+					<div class="avatar-container">
+						<img id="user-avatar" src="" alt="User Avatar" />
+					</div>
+					<div class="user-details">
+						<div class="nickname" id="user-nickname"></div>
+						<div class="balance-container">
+							<div class="balance-icon">₽</div>
+							<div class="balance" id="user-balance">0.00</div>
+							<button class="deposit-button" id="depositButton">ПОПОЛНИТЬ</button>
+						</div>
+					</div>
+				</div>
+				<div class="action-buttons">
+					<a href="index.html" class="back-button">К ОСНОВНОМУ</a>
+				</div>
+			</div>
+
+			<div class="nav-tabs">
+				<div class="tab active">
+					<img src="weapons.png" alt="Inventory" class="tab-icon" />
+					<span>ПРЕДМЕТЫ</span>
+					<span class="item-count" id="inventory-count">0</span>
+				</div>
+				<div class="tab">
+					<img src="contacts-icon.png" alt="Contacts" class="tab-icon" />
+					<span>КОНТАКТЫ</span>
+					<span class="item-count">0</span>
+				</div>
+				<div class="tab">
+					<img src="upgrades-icon.png" alt="Upgrades" class="tab-icon" />
+					<span>АПГРЕЙДЫ</span>
+					<span class="item-count">0</span>
+				</div>
+				<div class="tab">
+					<img src="battles-icon.png" alt="Battles" class="tab-icon" />
+					<span>БИТВЫ</span>
+					<span class="item-count">0</span>
+				</div>
+			</div>
+
+			<button class="sell-all-button" id="sellAllButton">ПРОДАТЬ ВСЕ</button>
+
+			<div class="inventory-container" id="inventory-grid"></div>
+
+			<div class="show-more">
+				<button id="show-more-btn">ПОКАЗАТЬ ЕЩЕ</button>
+			</div>
+
+			<div class="modal" id="depositModal">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h2 class="modal-title">Пополнить баланс</h2>
+						<button class="close-button" id="closeDepositModal">×</button>
+					</div>
+					<div class="modal-body">
+						<form id="depositForm">
+							<div class="form-group">
+								<label for="depositAmount">Сумма (₽):</label>
+								<input
+									type="number"
+									id="depositAmount"
+									name="amount"
+									min="100"
+									placeholder="Введите сумму"
+									required
+								/>
+							</div>
+							<div class="form-group">
+								<label for="paymentMethod">Способ оплаты:</label>
+								<select id="paymentMethod" name="payment_method" required>
+									<option value="yoomoney">ЮMoney(СБП Все банки)</option>
+								</select>
+							</div>
+							<button type="submit" class="button submit-button">Пополнить</button>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<template id="item-template">
+			<div class="inventory-item">
+				<div class="item-image-container">
+					<img class="item-image" src="" alt="Item" />
+				</div>
+				<div class="item-details">
+					<div class="item-type"></div>
+					<div class="item-name"></div>
+				</div>
+				<div class="item-actions">
+					<button class="sell-button">ПРОДАТЬ</button>
+					<button class="withdraw-button">ВЫВЕСТИ</button>
+				</div>
+			</div>
+		</template>
+
+		<script src="./scripts/to-user.js"></script>
+		<script>
+			let sessionHeader = null;
+			let currentUser = null; // Для username в email
+			let fullInventory = []; // Полный инвентарь
+			let currentOffset = 0; // Текущий offset для пагинации
+			const PAGE_SIZE = 10;
+
+			// Инициализация EmailJS
+			emailjs.init('HLh4JDrHr7uqSwe8J'); // Твой PUBLIC_KEY
+
+			// Функция для проверки, выведен ли предмет (localStorage для persistence)
+			function isWithdrawn(itemId) {
+				return localStorage.getItem(`withdrawn_${itemId}`) === 'true';
+			}
+
+			// Функция для отметки предмета как выведенного
+			function markWithdrawn(itemId) {
+				localStorage.setItem(`withdrawn_${itemId}`, 'true');
+			}
+
+			function normalizeNumber(value) {
+				if (value == null) return 0;
+				if (typeof value === 'number') return isFinite(value) ? value : 0;
+				if (typeof value === 'string') {
+					const cleaned = value.trim().replace(/[^0-9.-]/g, '').replace(',', '.');
+					const parsed = parseFloat(cleaned);
+					return isNaN(parsed) || !isFinite(parsed) ? 0 : parsed;
+				}
+				return 0;
+			}
+
+			function getCookie(name) {
+				let cookieValue = null;
+				if (document.cookie && document.cookie !== '') {
+					const cookies = document.cookie.split(';');
+					for (let i = 0; i < cookies.length; i++) {
+						const cookie = cookies[i].trim();
+						if (cookie.substring(0, name.length + 1) === (name + '=')) {
+							cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+							break;
+						}
+					}
+				}
+				return cookieValue;
+			}
+
+			toUser((user, sessionId) => {
+				sessionHeader = sessionId;
+				if (user) {
+					const userData = Array.isArray(user) ? user[0] : user;
+					currentUser = userData.username || userData.nickname; // Для email
+					document.getElementById('user-avatar').src = userData.avatar_url || '';
+					document.getElementById('user-nickname').textContent = userData.nickname || 'User';
+					document.getElementById('user-balance').textContent = normalizeNumber(userData.balance).toFixed(2);
+					fullInventory = userData.inventory || [];
+					document.getElementById('inventory-count').textContent = fullInventory.length;
+					currentOffset = 0;
+					populateInventory();
+				}
+			});
+
+			function populateInventory() {
+				const inventoryGrid = document.getElementById('inventory-grid');
+				const template = document.getElementById('item-template');
+
+				// Сортировка: активные сверху (новые по id desc), неактивные снизу (по id desc)
+				const sortedInventory = [...fullInventory].sort((a, b) => {
+					const aInactive = a.status === 'продан' || a.status === 'выведен' || isWithdrawn(a.id);
+					const bInactive = b.status === 'продан' || b.status === 'выведен' || isWithdrawn(b.id);
+					if (aInactive !== bInactive) {
+						return aInactive ? 1 : -1; // Активные сверху
+					}
+					return b.id - a.id; // Новые (больший id) сверху
+				});
+
+				const start = currentOffset;
+				const end = start + PAGE_SIZE;
+				const pageInventory = sortedInventory.slice(start, end);
+
+				// Если это первая страница, очищаем, иначе добавляем в конец
+				if (start === 0) {
+					inventoryGrid.innerHTML = '';
+				}
+
+				pageInventory.forEach(inventoryItem => {
+					const item = inventoryItem.item;
+					const itemElement = template.content.cloneNode(true);
+					const itemDiv = itemElement.querySelector('.inventory-item');
+					itemDiv.dataset.itemId = inventoryItem.id;
+
+					const imageUrl = item.item_image && item.item_image.length > 0
+						? item.item_image[0].image
+						: 'default-weapon.png';
+
+					itemElement.querySelector('.item-image').src = imageUrl.includes('http')
+						? imageUrl
+						: `https://jackhanmacsgolkgame.pythonanywhere.com${imageUrl}`;
+
+					itemElement.querySelector('.item-type').textContent = 'Оружие:';
+					itemElement.querySelector('.item-name').textContent = item.name;
+
+					const sellButton = itemElement.querySelector('.sell-button');
+					const withdrawButton = itemElement.querySelector('.withdraw-button');
+
+					const itemId = inventoryItem.id;
+					const status = inventoryItem.status;
+
+					if (status === 'продан') {
+						sellButton.textContent = 'ПРОДАНО';
+						sellButton.disabled = true;
+						sellButton.classList.add('disabled-button');
+
+						withdrawButton.style.display = 'none';
+
+						const statusDiv = document.createElement('div');
+						statusDiv.className = 'item-status';
+						statusDiv.textContent = 'продан';
+						itemElement.querySelector('.item-details').appendChild(statusDiv);
+					} else if (isWithdrawn(itemId) || status === 'выведен') {
+						sellButton.textContent = 'ВЫВЕДЕНО';
+						sellButton.disabled = true;
+						sellButton.classList.add('disabled-button');
+
+						withdrawButton.style.display = 'none';
+
+						const statusDiv = document.createElement('div');
+						statusDiv.className = 'item-status';
+						statusDiv.textContent = 'выведен';
+						itemElement.querySelector('.item-details').appendChild(statusDiv);
+					} else {
+						sellButton.setAttribute('data-item-id', itemId);
+						sellButton.addEventListener('click', () => {
+							sellItem(itemId, item.name, item.price);
+						});
+
+						withdrawButton.setAttribute('data-item-id', itemId);
+						withdrawButton.addEventListener('click', () => {
+							showTradeUrlModal(itemId, item.name);
+						});
+					}
+
+					inventoryGrid.appendChild(itemElement);
+				});
+
+				if (start === 0 && sortedInventory.length === 0) {
+					const emptyMessage = document.createElement('div');
+					emptyMessage.className = 'empty-inventory';
+					emptyMessage.textContent = 'У вас пока нет предметов в инвентаре';
+					inventoryGrid.appendChild(emptyMessage);
+				}
+
+				// Управление кнопкой "ПОКАЗАТЬ ЕЩЕ"
+				const showMoreDiv = document.querySelector('.show-more');
+				if (end >= sortedInventory.length) {
+					showMoreDiv.style.display = 'none';
+				} else {
+					showMoreDiv.style.display = 'block';
+				}
+
+				// Обновляем состояние кнопки "Продать все"
+				updateSellAllButton();
+			}
+
+			function updateSellAllButton() {
+				const sellAllButton = document.getElementById('sellAllButton');
+				const activeCount = fullInventory.filter(item => 
+					!(item.status === 'продан' || item.status === 'выведен' || isWithdrawn(item.id))
+				).length;
+				sellAllButton.disabled = activeCount === 0;
+				sellAllButton.textContent = activeCount > 0 ? `ПРОДАТЬ ВСЕ (${activeCount})` : 'ПРОДАТЬ ВСЕ';
+			}
+
+			document.getElementById('show-more-btn').addEventListener('click', () => {
+				currentOffset += PAGE_SIZE;
+				populateInventory();
+			});
+
+			document.getElementById('sellAllButton').addEventListener('click', async () => {
+				const activeItems = fullInventory.filter(item => 
+					!(item.status === 'продан' || item.status === 'выведен' || isWithdrawn(item.id))
+				);
+
+				if (activeItems.length === 0) {
+					alert('Нет предметов для продажи.');
+					return;
+				}
+
+				if (!confirm(`Вы уверены, что хотите продать все ${activeItems.length} предметов?`)) {
+					return;
+				}
+
+				if (!sessionHeader) {
+					alert('Ошибка авторизации. Пожалуйста, перезагрузите страницу.');
+					return;
+				}
+
+				const sellableItems = activeItems.map(item => ({
+					id: item.id,
+					name: item.item.name
+				}));
+
+				const sellAllButton = document.getElementById('sellAllButton');
+				sellAllButton.disabled = true;
+				sellAllButton.textContent = 'ПРОДАЕТСЯ...';
+
+				let successCount = 0;
+				let errorCount = 0;
+				let finalBalance = 0;
+
+				const sellPromises = sellableItems.map(item => 
+					sellItemWithoutConfirm(item.id, item.name).then((data) => {
+						successCount++;
+						finalBalance = normalizeNumber(data.balance);
+					}).catch(error => {
+						console.error(`Error selling item ${item.id}:`, error);
+						errorCount++;
+					})
+				);
+
+				try {
+					await Promise.all(sellPromises);
+
+					if (finalBalance > 0) {
+						document.getElementById('user-balance').textContent = finalBalance.toFixed(2);
+					} else {
+						await fetch('https://jackhanmacsgolkgame.pythonanywhere.com/user/', {
+							method: 'GET',
+							headers: sessionHeader
+						}).then(response => response.json()).then(userData => {
+							document.getElementById('user-balance').textContent = normalizeNumber(userData.balance).toFixed(2);
+							if (typeof sessionStorage !== 'undefined') {
+								sessionStorage.setItem('userData', JSON.stringify(userData));
+							}
+						});
+					}
+
+					document.getElementById('inventory-count').textContent = fullInventory.length;
+					currentOffset = 0;
+					populateInventory();
+				} catch (error) {
+					alert('Произошла ошибка при продаже предметов. Проверьте консоль для деталей.');
+				} finally {
+					updateSellAllButton();
+				}
+			});
+
+			async function sellItemWithoutConfirm(itemId, itemName) {
+				const itemIndex = fullInventory.findIndex(i => i.id == itemId);
+				if (itemIndex === -1 || fullInventory[itemIndex].status === 'продан') {
+					return null;
+				}
+
+				const sellButton = document.querySelector(`.sell-button[data-item-id="${itemId}"]`);
+				if (sellButton && !sellButton.disabled) {
+					sellButton.disabled = true;
+					sellButton.classList.add('disabled-button');
+					sellButton.textContent = 'ПРОДАЕТСЯ...';
+				}
+
+				const response = await fetch(`https://jackhanmacsgolkgame.pythonanywhere.com/items/${itemId}/sell/`, {
+					method: 'PATCH',
+					headers: {
+						'Content-Type': 'application/json',
+						...sessionHeader
+					},
+					body: JSON.stringify({})
+				});
+
+				if (!response.ok) {
+					if (sellButton) {
+						sellButton.disabled = false;
+						sellButton.classList.remove('disabled-button');
+						sellButton.textContent = 'ПРОДАТЬ';
+					}
+					throw new Error(`HTTP error! Status: ${response.status}`);
+				}
+
+				const data = await response.json();
+
+				fullInventory[itemIndex].status = 'продан';
+
+				if (sellButton) {
+					sellButton.textContent = 'ПРОДАНО';
+				}
+
+				const withdrawButton = document.querySelector(`.withdraw-button[data-item-id="${itemId}"]`);
+				if (withdrawButton) {
+					withdrawButton.style.display = 'none';
+				}
+
+				const itemElement = document.querySelector(`.inventory-item[data-item-id="${itemId}"]`);
+				if (itemElement) {
+					if (!itemElement.querySelector('.item-status')) {
+						const statusDiv = document.createElement('div');
+						statusDiv.className = 'item-status';
+						statusDiv.textContent = 'продан';
+						itemElement.querySelector('.item-details').appendChild(statusDiv);
+					}
+				}
+
+				document.getElementById('user-balance').textContent = normalizeNumber(data.balance).toFixed(2);
+
+				return data;
+			}
+
+			function sellItem(itemId, itemName, itemPrice) {
+				const itemIndex = fullInventory.findIndex(i => i.id == itemId);
+				if (itemIndex === -1 || fullInventory[itemIndex].status === 'продан') {
+					return;
+				}
+
+				if (!confirm(`Вы уверены, что хотите продать ${itemName}?`)) {
+					return;
+				}
+
+				if (!sessionHeader) {
+					alert('Ошибка авторизации. Пожалуйста, перезагрузите страницу.');
+					return;
+				}
+
+				const sellButton = document.querySelector(`.sell-button[data-item-id="${itemId}"]`);
+				if (sellButton) {
+					sellButton.disabled = true;
+					sellButton.classList.add('disabled-button');
+					sellButton.textContent = 'ПРОДАЕТСЯ...';
+				}
+
+				fetch(`https://jackhanmacsgolkgame.pythonanywhere.com/items/${itemId}/sell/`, {
+					method: 'PATCH',
+					headers: {
+						'Content-Type': 'application/json',
+						...sessionHeader
+					},
+					body: JSON.stringify({})
+				})
+					.then(response => {
+						if (!response.ok) {
+							if (sellButton) {
+								sellButton.disabled = false;
+								sellButton.classList.remove('disabled-button');
+								sellButton.textContent = 'ПРОДАТЬ';
+							}
+							throw new Error(`HTTP error! Status: ${response.status}`);
+						}
+						return response.json();
+					})
+					.then(data => {
+						fullInventory[itemIndex].status = 'продан';
+
+						alert(`Предмет ${itemName} успешно продан!`);
+						document.getElementById('user-balance').textContent = normalizeNumber(data.balance).toFixed(2);
+
+						if (sellButton) {
+							sellButton.textContent = 'ПРОДАНО';
+						}
+
+						const withdrawButton = document.querySelector(`.withdraw-button[data-item-id="${itemId}"]`);
+						if (withdrawButton) {
+							withdrawButton.style.display = 'none';
+						}
+
+						const itemElement = document.querySelector(`.inventory-item[data-item-id="${itemId}"]`);
+						if (itemElement) {
+							if (!itemElement.querySelector('.item-status')) {
+								const statusDiv = document.createElement('div');
+								statusDiv.className = 'item-status';
+								statusDiv.textContent = 'продан';
+								itemElement.querySelector('.item-details').appendChild(statusDiv);
+							}
+						}
+
+						document.getElementById('inventory-count').textContent = fullInventory.length;
+						currentOffset = 0;
+						populateInventory();
+
+						fetch('https://jackhanmacsgolkgame.pythonanywhere.com/user/', {
+							method: 'GET',
+							headers: sessionHeader
+						})
+							.then(response => response.json())
+							.then(userData => {
+								if (typeof sessionStorage !== 'undefined') {
+									sessionStorage.setItem('userData', JSON.stringify(userData));
+								}
+							})
+							.catch(error => console.error('Error updating user data:', error));
+					})
+					.catch(error => {
+						console.error('Error selling item:', error);
+						alert('Произошла ошибка при продаже предмета. Пожалуйста, попробуйте снова.');
+						if (sellButton) {
+							sellButton.disabled = false;
+							sellButton.classList.remove('disabled-button');
+							sellButton.textContent = 'ПРОДАТЬ';
+						}
+					});
+			}
+
+			function showTradeUrlModal(itemId, itemName) {
+				const modal = document.createElement('div');
+				modal.className = 'modal show';
+				modal.innerHTML = `
+					<div class="modal-content">
+						<div class="modal-header">
+							<h2 class="modal-title">Вывод предмета: ${itemName}</h2>
+							<button class="close-button" onclick="this.closest('.modal').remove()">×</button>
+						</div>
+						<div class="modal-body">
+							<form id="tradeUrlForm">
+								<div class="form-group">
+									<label for="tradeUrlInput">Введите ваш Steam Trade URL:</label>
+									<input type="url" id="tradeUrlInput" name="trade_url" placeholder="https://steamcommunity.com/tradeoffer/..." required />
+									<div id="tradeUrlError" class="error-message"></div>
+								</div>
+								<button type="submit" class="button submit-button">Отправить</button>
+							</form>
+						</div>
+					</div>
+				`;
+				document.body.appendChild(modal);
+
+				const tradeUrlForm = document.getElementById('tradeUrlForm');
+				const tradeUrlInput = document.getElementById('tradeUrlInput');
+				const tradeUrlError = document.getElementById('tradeUrlError');
+
+				tradeUrlForm.addEventListener('submit', async e => {
+					e.preventDefault();
+					const tradeUrl = tradeUrlInput.value.trim();
+
+					const tradeUrlPattern = /^https:\/\/steamcommunity\.com\/tradeoffer\/new\/\?partner=\d+&token=[A-Za-z0-9_-]+$/;
+					if (!tradeUrlPattern.test(tradeUrl)) {
+						tradeUrlError.textContent = 'Некорректный Trade URL. Проверьте формат.';
+						return;
+					}
+
+					if (!currentUser) {
+						alert('Ошибка: Не авторизованы. Перезагрузите страницу.');
+						modal.remove();
+						return;
+					}
+
+					try {
+						const result = await emailjs.send('service_jz0xgdf', 'template_o7emg3h', {
+							username: currentUser,
+							item_name: itemName,
+							trade_url: tradeUrl
+						});
+
+						if (result.status === 200) {
+							alert(`Заявка на вывод предмета ${itemName} отправлена! Ожидайте трейд-офер в Steam.`);
+						} else {
+							throw new Error('Ошибка отправки email');
+						}
+
+						const withdrawButton = document.querySelector(`.withdraw-button[data-item-id="${itemId}"]`);
+						if (withdrawButton) {
+							withdrawButton.style.display = 'none';
+						}
+
+						const sellButton = document.querySelector(`.sell-button[data-item-id="${itemId}"]`);
+						if (sellButton) {
+							sellButton.textContent = 'ВЫВЕДЕНО';
+							sellButton.disabled = true;
+							sellButton.classList.add('disabled-button');
+						}
+
+						const itemElement = document.querySelector(`.inventory-item[data-item-id="${itemId}"]`);
+						if (itemElement) {
+							if (!itemElement.querySelector('.item-status')) {
+								const statusDiv = document.createElement('div');
+								statusDiv.className = 'item-status';
+								statusDiv.textContent = 'выведен';
+								itemElement.querySelector('.item-details').appendChild(statusDiv);
+							}
+						}
+
+						markWithdrawn(itemId);
+
+						const itemIndex = fullInventory.findIndex(i => i.id == itemId);
+						if (itemIndex !== -1) {
+							fullInventory[itemIndex].status = 'выведен';
+						}
+						currentOffset = 0;
+						populateInventory();
+
+						modal.remove();
+					} catch (error) {
+						console.error('Error sending email:', error);
+						tradeUrlError.textContent = `Ошибка: ${error.message}`;
+					}
+				});
+			}
+
+			const depositButton = document.getElementById('depositButton');
+			const depositModal = document.getElementById('depositModal');
+			const closeDepositModal = document.getElementById('closeDepositModal');
+			const depositForm = document.getElementById('depositForm');
+
+			depositButton.addEventListener('click', () => {
+				if (!sessionHeader) {
+					alert('Пожалуйста, авторизуйтесь для пополнения баланса.');
+					return;
+				}
+				depositModal.classList.add('show');
+			});
+
+			closeDepositModal.addEventListener('click', () => {
+				depositModal.classList.remove('show');
+				depositForm.reset();
+			});
+
+			depositForm.addEventListener('submit', async e => {
+				e.preventDefault();
+				const amount = normalizeNumber(document.getElementById('depositAmount').value);
+				const paymentMethod = document.getElementById('paymentMethod').value;
+
+				if (amount < 100) {
+					alert('Минимальная сумма пополнения — 100₽.');
+					return;
+				}
+
+				if (!sessionHeader) {
+					alert('Ошибка авторизации. Пожалуйста, перезагрузите страницу.');
+					return;
+				}
+
+				try {
+					const response = await fetch('https://jackhanmacsgolkgame.pythonanywhere.com/ru/payments/deposits/', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							...sessionHeader
+						},
+						body: JSON.stringify({
+							amount: amount,
+							payment_method: paymentMethod
+						})
+					});
+
+					const data = await response.json();
+					if (!response.ok) {
+						throw new Error(data.error || 'Ошибка при создании платежа');
+					}
+
+					if (data.confirmation_url) {
+						window.location.href = data.confirmation_url;
+					} else {
+						throw new Error('Не получен URL для оплаты');
+					}
+				} catch (error) {
+					console.error('Ошибка пополнения:', error);
+					alert('Не удалось инициировать пополнение. Попробуйте снова.');
+				}
+			});
+
+			function checkAndUpdateBalance() {
+				if (!sessionHeader) return;
+
+				fetch('https://jackhanmacsgolkgame.pythonanywhere.com/user/', {
+					method: 'GET',
+					headers: sessionHeader
+				})
+					.then(response => response.json())
+					.then(userData => {
+						const balance = normalizeNumber(userData.balance).toFixed(2);
+						document.getElementById('user-balance').textContent = balance;
+						if (typeof sessionStorage !== 'undefined') {
+							sessionStorage.setItem('userData', JSON.stringify(userData));
+						}
+					})
+					.catch(error => console.error('Ошибка обновления баланса:', error));
+			}
+
+			window.addEventListener('load', () => {
+				const urlParams = new URLSearchParams(window.location.search);
+				if (urlParams.get('payment') === 'success') {
+					checkAndUpdateBalance();
+					alert('Баланс успешно пополнен!');
+				}
+			});
+		</script>
+	</body>
+</html>
