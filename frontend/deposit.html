@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<title>Пополнение баланса — GLDROP</title>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta name="theme-color" content="#cd7f32">
+	<link rel="stylesheet" href="styles/global.css" />
+	<link rel="stylesheet" href="styles/additional-style.css" />
+	<link rel="icon" href="images/logo.png" type="image/png" />
+	<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	<link rel="preconnect" href="https://jackhanmacsgolkgame.pythonanywhere.com">
+	<link rel="dns-prefetch" href="https://jackhanmacsgolkgame.pythonanywhere.com">
+
+	<style>
+		/* === ОСНОВНОЙ СТИЛЬ — GGDrop + CSCase === */
+		.deposit-page {
+			min-height: 100vh;
+			background: linear-gradient(135deg, #0a0c0f 0%, #0f1114 100%);
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			padding: 8rem 1rem 4rem;
+		}
+
+		.deposit-container {
+			background: #1a1d21;
+			border: 1px solid rgba(205,127,50,0.2);
+			border-radius: 20px;
+			max-width: 500px;
+			width: 100%;
+			padding: 2.5rem;
+			box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+			position: relative;
+			overflow: hidden;
+		}
+
+		.deposit-container::before {
+			content: '';
+			position: absolute;
+			top: 0; left: 0; right: 0; bottom: 0;
+			background: linear-gradient(45deg, rgba(205,127,50,0.05), transparent 50%);
+			pointer-events: none;
+			border-radius: 20px;
+		}
+
+		.deposit-header {
+			text-align: center;
+			margin-bottom: 2rem;
+		}
+
+		.deposit-header h1 {
+			font-family: 'Orbitron', sans-serif;
+			font-size: 2.2rem;
+			font-weight: 900;
+			color: #cd7f32;
+			margin-bottom: 0.5rem;
+			text-shadow: 0 0 15px rgba(205,127,50,0.4);
+		}
+
+		.deposit-header p {
+			color: #aaa;
+			font-size: 1rem;
+		}
+
+		.balance-info {
+			background: rgba(205,127,50,0.1);
+			border: 1px solid rgba(205,127,50,0.3);
+			border-radius: 16px;
+			padding: 1rem;
+			text-align: center;
+			margin-bottom: 2rem;
+			font-weight: 600;
+		}
+
+		.balance-info .label {
+			color: #aaa;
+			font-size: 0.9rem;
+		}
+
+		.balance-info .amount {
+			color: #cd7f32;
+			font-size: 1.8rem;
+			font-weight: 700;
+		}
+
+		.payment-methods {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+			gap: 1rem;
+			margin-bottom: 2rem;
+		}
+
+		.method {
+			background: #2a2d31;
+			border: 2px solid transparent;
+			border-radius: 14px;
+			padding: 1rem;
+			text-align: center;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			position: relative;
+		}
+
+		.method:hover {
+			background: rgba(205,127,50,0.1);
+			border-color: #cd7f32;
+			transform: translateY(-3px);
+		}
+
+		.method.active {
+			background: rgba(205,127,50,0.15);
+			border-color: #cd7f32;
+			box-shadow: 0 0 20px rgba(205,127,50,0.3);
+		}
+
+		.method i {
+			font-size: 1.8rem;
+			color: #cd7f32;
+			margin-bottom: 0.5rem;
+		}
+
+		.method span {
+			display: block;
+			font-size: 0.9rem;
+			color: #fff;
+			font-weight: 600;
+		}
+
+		.amount-input-group {
+			position: relative;
+			margin-bottom: 1.5rem;
+		}
+
+		.amount-input-group input {
+			width: 100%;
+			padding: 1rem 1rem 1rem 3rem;
+			background: #2a2d31;
+			border: 1px solid #444;
+			border-radius: 14px;
+			color: #fff;
+			font-size: 1.3rem;
+			font-weight: 600;
+			text-align: center;
+		}
+
+		.amount-input-group .rub {
+			position: absolute;
+			left: 1rem;
+			top: 50%;
+			transform: translateY(-50%);
+			font-size: 1.3rem;
+			color: #cd7f32;
+			font-weight: 700;
+		}
+
+		.quick-amounts {
+			display: flex;
+			gap: 0.8rem;
+			flex-wrap: wrap;
+			margin-bottom: 2rem;
+		}
+
+		.quick-btn {
+			flex: 1;
+			min-width: 80px;
+			background: #2a2d31;
+			border: 1px solid #444;
+			color: #fff;
+			padding: 0.8rem;
+			border-radius: 12px;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.3s ease;
+		}
+
+		.quick-btn:hover, .quick-btn.active {
+			background: #cd7f32;
+			color: #000;
+			border-color: #cd7f32;
+		}
+
+		.deposit-button {
+			width: 100%;
+			padding: 1.2rem;
+			background: linear-gradient(135deg, #cd7f32, #e69a50);
+			color: #000;
+			border: none;
+			border-radius: 50px;
+			font-size: 1.2rem;
+			font-weight: 700;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			box-shadow: 0 8px 25px rgba(205,127,50,0.4);
+			position: relative;
+			overflow: hidden;
+		}
+
+		.deposit-button:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 12px 30px rgba(205,127,50,0.5);
+		}
+
+		.deposit-button:disabled {
+			background: #555;
+			cursor: not-allowed;
+			transform: none;
+			box-shadow: none;
+		}
+
+		.benefits {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2.5rem;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #aaa;
+            flex-wrap: nowrap; /* ← не переносим в колонку */
+        }
+
+		.benefit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px;
+}
+
+.benefit i {
+    color: #cd7f32;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+		.back-link {
+			display: block;
+			text-align: center;
+			margin-top: 2rem;
+			color: #aaa;
+			text-decoration: none;
+			font-size: 0.9rem;
+		}
+
+		.back-link:hover {
+			color: #cd7f32;
+		}
+
+		@media (max-width: 480px) {
+			.deposit-container { padding: 2rem 1.5rem; }
+			.deposit-header h1 { font-size: 1.8rem; }
+		}
+	</style>
+</head>
+<body>
+
+	<!-- HEADER (тот же, что на index.html) -->
+	<header class="header-main">
+		<div class="nav-container">
+			<div class="logo-language-group">
+				<div class="Logo">
+					<img src="images/logo.png" alt="GLDROP" />
+					<h1 class="logo-text">GLDROP</h1>
+				</div>
+			</div>
+			<div id="user-profile" class="hidden" style="display: none;">
+				<a href="user.html" class="profile-link">
+					<div class="profile-view">
+						<div class="profile-avatar"><img id="user-avatar" src="" alt=""></div>
+						<div class="profile-info">
+							<div class="profile-nickname" id="user-nickname"></div>
+							<div class="profile-balance" id="user-balance"></div>
+						</div>
+						<div class="profile-deposit"><i class="fas fa-plus"></i><span class="rub-icon">₽</span></div>
+					</div>
+				</a>
+				<button id="logoutButton" class="logout-button" style="margin-left: 10px;"><i class="fas fa-sign-out-alt"></i></button>
+			</div>
+		</div>
+	</header>
+
+	<div class="deposit-page">
+		<div class="deposit-container">
+			<div class="deposit-header">
+				<h1>Пополнить баланс</h1>
+				<p>Мгновенное зачисление • Без комиссии</p>
+			</div>
+
+			<div class="balance-info">
+				<div class="label">Текущий баланс</div>
+				<div class="amount" id="current-balance">Загрузка баланса...</div>
+			</div>
+
+			<div class="payment-methods">
+				<div class="method active" data-method="yoomoney">
+					<i class="fas fa-wallet"></i>
+					<span>ЮMoney</span>
+				</div>
+				<div class="method" data-method="card">
+					<i class="fas fa-credit-card"></i>
+					<span>Карта</span>
+				</div>
+				<!--<div class="method" data-method="crypto">
+					<i class="fab fa-bitcoin"></i>
+					<span>Crypto</span>
+				</div>-->
+			</div>
+
+			<div class="amount-input-group">
+				<span class="rub">₽</span>
+				<input type="number" id="deposit-amount" placeholder="100" min="100" />
+			</div>
+
+			<div class="quick-amounts">
+				<button class="quick-btn" data-amount="100">100 ₽</button>
+				<button class="quick-btn" data-amount="500">500 ₽</button>
+				<button class="quick-btn" data-amount="1000">1000 ₽</button>
+				<button class="quick-btn" data-amount="5000">5000 ₽</button>
+			</div>
+
+			<button class="deposit-button" id="pay-button">
+				<i class="fas fa-lock"></i> Пополнить безопасно
+			</button>
+
+			<div class="benefits">
+				<div class="benefit">
+					<i class="fas fa-bolt"></i>
+					<div>Мгновенно</div>
+				</div>
+				<div class="benefit">
+					<i class="fas fa-shield-alt"></i>
+					<div>Безопасно</div>
+				</div>
+				<div class="benefit">
+					<i class="fas fa-gift"></i>
+					<div>Бонусы</div>
+				</div>
+			</div>
+
+			<a href="index.html" class="back-link">← Вернуться на главную</a>
+		</div>
+	</div>
+
+	<script src="./scripts/to-user.js"></script>
+	<script>
+		document.addEventListener('DOMContentLoaded', () => {
+    const sessionId = localStorage.getItem('sessionid');
+
+    if (!sessionId) {
+        alert('Пожалуйста, авторизуйтесь');
+        location.href = 'index.html';
+        return;
+    }
+
+    // Проверяем, что сессия действительно жива
+    toUser(user => {
+        if (!user) {
+            alert('Сессия недействительна. Нужно войти заново');
+            localStorage.removeItem('sessionid');
+            location.href = 'index.html';
+            return;
+        }
+
+        const data = Array.isArray(user) ? user[0] : user;
+
+        // Заполняем профиль в шапке
+        document.getElementById('user-avatar').src = data.avatar_url || 'default-avatar.png';
+        document.getElementById('user-nickname').textContent = data.nickname || 'User';
+        document.getElementById('user-balance').textContent = `${data.balance || 0}₽`;
+
+        // Текущий баланс на странице пополнения
+        document.getElementById('current-balance').textContent = `${data.balance || 0} ₽`;
+
+        // Показываем профиль
+        document.getElementById('user-profile').style.display = 'flex';
+        document.getElementById('user-profile').classList.remove('hidden');
+    });
+
+    // === ВЫБОР СПОСОБА ОПЛАТЫ ===
+    document.querySelectorAll('.method').forEach(m => {
+        m.addEventListener('click', () => {
+            document.querySelectorAll('.method').forEach(x => x.classList.remove('active'));
+            m.classList.add('active');
+        });
+    });
+
+    // === БЫСТРЫЕ СУММЫ ===
+    document.querySelectorAll('.quick-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.quick-btn').forEach(x => x.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('deposit-amount').value = btn.dataset.amount;
+        });
+    });
+
+    // === ОПЛАТА ===
+    document.getElementById('pay-button').addEventListener('click', async () => {
+        const amount = parseFloat(document.getElementById('deposit-amount').value);
+        if (!amount || amount < 100) return alert('Минимум 100₽');
+
+        const method = document.querySelector('.method.active').dataset.method;
+        const sessionId = localStorage.getItem('sessionid');
+
+        if (!sessionId) {
+            alert('Ошибка авторизации. Войдите заново.');
+            location.href = 'index.html';
+            return;
+        }
+
+        const btn = document.getElementById('pay-button');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Обработка...';
+
+        try {
+            const res = await fetch('https://jackhanmacsgolkgame.pythonanywhere.com/ru/payments/deposits/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Session ${sessionId}`
+                },
+                body: JSON.stringify({ amount, payment_method: method })
+            });
+
+            const data = await res.json();
+
+            if (data.confirmation_url) {
+                localStorage.setItem('returnAfterPayment', 'deposit.html');
+                location.href = data.confirmation_url;
+            } else {
+                alert('Ошибка при создании платежа');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Ошибка соединения');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-lock"></i> Пополнить безопасно';
+        }
+    });
+
+    // === ВЫХОД ===
+    document.getElementById('logoutButton')?.addEventListener('click', () => {
+        localStorage.removeItem('sessionid');
+        location.href = 'index.html';
+    });
+
+    // === ВОЗВРАТ ПОСЛЕ УСПЕШНОЙ ОПЛАТЫ ===
+    if (location.search.includes('payment=success')) {
+        alert('Баланс успешно пополнен!');
+        history.replaceState({}, '', 'deposit.html');
+        // Обновляем баланс
+        toUser(u => {
+            const b = (Array.isArray(u) ? u[0] : u).balance || 0;
+            document.getElementById('current-balance').textContent = `${b} ₽`;
+            document.getElementById('user-balance').textContent = `${b}₽`;
+        });
+    }
+});
+	</script>
+</body>
+</html>

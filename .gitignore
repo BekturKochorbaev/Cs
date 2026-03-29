@@ -1,0 +1,64 @@
+# ========================
+# Python / Django
+# ========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Django
+backend/db.sqlite3
+backend/staticfiles/
+backend/media/
+backend/*/migrations/__pycache__/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# ========================
+# Environment & Secrets
+# ========================
+.env
+.env.*
+!.env.example
+backend/bot_secrets.py
+
+# ========================
+# Docker
+# ========================
+# не игнорируем docker-compose.yml и Dockerfile — они нужны в репо
+
+# ========================
+# Logs
+# ========================
+*.log
+logs/
+
+# ========================
+# OS
+# ========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ========================
+# IDE
+# ========================
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ========================
+# Let's Encrypt / SWAG
+# ========================
+nginx/letsencrypt/

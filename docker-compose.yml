@@ -1,0 +1,63 @@
+version: '3.10'
+
+services:
+
+  db:
+    image: postgres:17
+    container_name: db
+    restart: unless-stopped
+    env_file:
+      - backend/.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+  web:
+    build: ./backend
+    container_name: web
+    restart: unless-stopped
+    env_file:
+      - backend/.env
+    volumes:
+      - staticfiles:/app/staticfiles/
+      - media:/app/media/
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: frontend
+    restart: unless-stopped
+
+  nginx:
+    image: linuxserver/swag
+    container_name: nginx
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Moscow
+      - URL=gamecs.ru
+      - SUBDOMAINS=api
+      - VALIDATION=http
+      - STAGING=false
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - lets:/config
+      - ./nginx/ssl.conf:/config/nginx/site-confs/ssl/ssl.conf
+      - ./nginx/gamecs.conf:/config/nginx/site-confs/gamecs.conf
+      - ./nginx/api.conf:/config/nginx/site-confs/api.conf
+      - staticfiles:/app/staticfiles/
+      - media:/app/media/
+    depends_on:
+      - web
+      - frontend
+
+volumes:
+  postgres_data:
+  lets:
+  staticfiles:
+  media:
