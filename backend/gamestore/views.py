@@ -31,11 +31,18 @@ STEAM_API_KEY = os.getenv("STEAM_API_KEY")
 
 class SteamLoginView(View):
     def get(self, request):
+        # Определяем базовый URL бэкенда и фронтенда
+        # Лучше вынести это в .env, но для теста можно прописать так:
+        base_url = "https://api.gldrop.fan" 
+        realm_url = "https://gldrop.fun" # Ваш основной домен
+
         params = {
             "openid.ns": "http://specs.openid.net/auth/2.0",
             "openid.mode": "checkid_setup",
-            "openid.return_to": request.build_absolute_uri('/steam/callback/'),
-            "openid.realm": request.build_absolute_uri('/'),
+            # Возврат должен идти строго на бэкенд, который обработает данные
+            "openid.return_to": f"{base_url}/api/steam/callback/", 
+            # Realm должен указывать на главный сайт, которому пользователь доверяет
+            "openid.realm": f"{realm_url}/",
             "openid.identity": "http://specs.openid.net/auth/2.0/identifier_select",
             "openid.claimed_id": "http://specs.openid.net/auth/2.0/identifier_select",
         }
@@ -47,7 +54,7 @@ class SteamCallbackView(View):
         if not claimed_id or "steamcommunity.com/openid/id/" not in claimed_id:
             return HttpResponseBadRequest("Invalid Steam response")
         steam_id = claimed_id.split("/")[-1]
-        steam_api_url = f"http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={STEAM_API_KEY}&steamids={steam_id}"
+        steam_api_url = f"https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={STEAM_API_KEY}&steamids={steam_id}"
         response = requests.get(steam_api_url)
         data = response.json()
         player_data = data.get("response", {}).get("players", [{}])[0]
