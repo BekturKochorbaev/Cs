@@ -21,6 +21,7 @@ from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.views import View
 import requests
 from .auth import CsrfExemptSessionAuthentication
+import os
 from dotenv import load_dotenv
 load_dotenv()
 
