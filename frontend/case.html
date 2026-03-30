@@ -1016,7 +1016,7 @@
             steamLoginLink.addEventListener('click', (e) => {
                 e.preventDefault();
                 localStorage.setItem('login_redirect', window.location.href);
-                window.location.href = 'https://jackhanmacsgolkgame.pythonanywhere.com/ru/steam/login';
+                window.location.href = 'https://api.gldrop.fun/ru/steam/login/';
             });
         }
 
@@ -1025,7 +1025,7 @@
             loginNotice.style.cursor = 'pointer';
             loginNotice.addEventListener('click', () => {
                 localStorage.setItem('login_redirect', window.location.href);
-                window.location.href = 'https://jackhanmacsgolkgame.pythonanywhere.com/ru/steam/login';
+                window.location.href = 'https://api.gldrop.fun/ru/steam/login/';
             });
         }
     });

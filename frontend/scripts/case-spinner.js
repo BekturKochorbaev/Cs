@@ -32,7 +32,7 @@ class CaseSpinner {
 		},
 		api: {
 			openCaseEndpoint:
-				'https://jackhanmacsgolkgame.pythonanywhere.com/en/cases/{caseId}/open/',
+				'https://api.gldrop.fun/ru/cases/{caseId}/open/',
 			credentials: 'include',
 			headers: {
 				'Content-Type': 'application/json'

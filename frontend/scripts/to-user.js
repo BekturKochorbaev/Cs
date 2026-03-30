@@ -24,7 +24,7 @@ function toAuthorization(callback) {
         return;
     }
 
-    fetch('https://jackhanmacsgolkgame.pythonanywhere.com/ru/user/', {
+    fetch('https://api.gldrop.fun/ru/user/', {
         method: 'GET',
         credentials: 'include',
         headers: {

@@ -2,7 +2,7 @@ function toCase(callback) {
 	toUser((user, headers) => {
 		const caseId = getCaseId();
 
-		fetch(`https://jackhanmacsgolkgame.pythonanywhere.com/cases/${caseId}`, {
+		fetch(`https://api.gldrop.fun/ru/cases/${caseId}/`, {
 			method: 'GET',
 			credentials: 'include',
 			headers: {

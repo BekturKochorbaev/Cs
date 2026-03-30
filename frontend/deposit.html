@@ -10,8 +10,8 @@
 	<link rel="icon" href="images/logo.png" type="image/png" />
 	<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-	<link rel="preconnect" href="https://jackhanmacsgolkgame.pythonanywhere.com">
-	<link rel="dns-prefetch" href="https://jackhanmacsgolkgame.pythonanywhere.com">
+	<link rel="preconnect" href="https://api.gldrop.fun">
+	<link rel="dns-prefetch" href="https://api.gldrop.fun">
 
 	<style>
 		/* === ОСНОВНОЙ СТИЛЬ — GGDrop + CSCase === */
@@ -413,7 +413,7 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Обработка...';
 
         try {
-            const res = await fetch('https://jackhanmacsgolkgame.pythonanywhere.com/ru/payments/deposits/', {
+            const res = await fetch('https://api.gldrop.fun/ru/payments/deposits/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

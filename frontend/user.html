@@ -366,7 +366,7 @@
 
             const img = el.querySelector('.item-image');
             const imgUrl = item.item_image?.[0]?.image || 'default-weapon.png';
-            img.src = imgUrl.includes('http') ? imgUrl : `https://jackhanmacsgolkgame.pythonanywhere.com${imgUrl}`;
+            img.src = imgUrl.includes('http') ? imgUrl : `https://api.gldrop.fun${imgUrl}`;
 
             el.querySelector('.item-type').textContent = 'Оружие:';
             el.querySelector('.item-name').textContent = item.name;
@@ -502,7 +502,7 @@
             confirmBtn.textContent = 'ПРОДАЁТСЯ...';
             confirmBtn.classList.add('disabled-button');
 
-            fetch(`https://jackhanmacsgolkgame.pythonanywhere.com/items/${id}/sell/`, {
+            fetch(`https://api.gldrop.fun/ru/items/${id}/sell/`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json', ...sessionHeader },
                 body: JSON.stringify({})
@@ -673,7 +673,7 @@
             sellingInProgress.add(id);
 
             try {
-                const res = await fetch(`https://jackhanmacsgolkgame.pythonanywhere.com/items/${id}/sell/`, {
+                const res = await fetch(`https://api.gldrop.fun/ru/items/${id}/sell/`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json', ...sessionHeader },
                     body: '{}'
@@ -717,7 +717,7 @@
         const p = new URLSearchParams(window.location.search);
         const ret = sessionStorage.getItem('returnAfterPayment') || 'index.html';
         if (p.get('payment') === 'success') {
-            fetch('https://jackhanmacsgolkgame.pythonanywhere.com/user/', { headers: sessionHeader })
+            fetch('https://api.gldrop.fun/ru/user/', { headers: sessionHeader })
                 .then(r => r.json())
                 .then(d => {
                     document.getElementById('user-balance').textContent = normalizeNumber(d.balance).toFixed(2);

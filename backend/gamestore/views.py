@@ -60,7 +60,7 @@ class SteamCallbackView(View):
         if not session_key:
             request.session.save()
             session_key = request.session.session_key
-        redirect_url = f"https://gamecs.ru/?session={session_key}"
+        redirect_url = f"https://gldrop.fun/?session={session_key}"
         return redirect(redirect_url)
 
 class CurrentUserView(generics.ListAPIView):

@@ -4,7 +4,7 @@ function load(authHeaders) {
 		const caseId = getCaseId();
 		if (!caseId) throw new Error('ID кейса не найден');
 
-		const endpoint = `https://jackhanmacsgolkgame.pythonanywhere.com/en/cases/${caseId}/open/`;
+		const endpoint = `https://api.gldrop.fun/ru/cases/${caseId}/open/`;
 
 		const response = await fetch(endpoint, {
 			method: 'POST',

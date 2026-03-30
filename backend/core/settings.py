@@ -7,9 +7,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ["api.gamecs.ru", "127.0.0.1", "web"]
+ALLOWED_HOSTS = ["api.gldrop.fun", "127.0.0.1", "web"]
 
 INSTALLED_APPS = [
     'jazzmin',
@@ -125,8 +125,8 @@ AUTH_USER_MODEL = 'gamestore.User'
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
-    "https://gamecs.ru",
-    "https://www.gamecs.ru",
+    "https://gldrop.fun",
+    "https://www.gldrop.fun",
     "http://127.0.0.1:5500",
 ]
 
@@ -135,9 +135,9 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://gamecs.ru",
-    "https://www.gamecs.ru",
-    "https://api.gamecs.ru",
+    "https://gldrop.fun",
+    "https://www.gldrop.fun",
+    "https://api.gldrop.fun",
 ]
 
 SESSION_COOKIE_SAMESITE = "Lax"
@@ -149,4 +149,4 @@ CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 
 YOOKASSA_SHOP_ID = os.getenv('YOOKASSA_SHOP_ID', '1146067')
 YOOKASSA_SECRET_KEY = os.getenv('YOOKASSA_SECRET_KEY', '')
-FRONTEND_RETURN_URL = os.getenv('FRONTEND_RETURN_URL', 'https://gamecs.ru/user.html')
+FRONTEND_RETURN_URL = os.getenv('FRONTEND_RETURN_URL', 'https://gldrop.fun/user.html')

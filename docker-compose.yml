@@ -1,5 +1,3 @@
-version: '3.10'
-
 services:
 
   db:
@@ -25,8 +23,7 @@ services:
 
   frontend:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ./frontend
     container_name: frontend
     restart: unless-stopped
 
@@ -38,7 +35,7 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Moscow
-      - URL=gamecs.ru
+      - URL=gldrop.fun
       - SUBDOMAINS=api
       - VALIDATION=http
       - STAGING=false

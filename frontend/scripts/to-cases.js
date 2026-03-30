@@ -1,5 +1,5 @@
 function toCases(callback) {
-	fetch('https://jackhanmacsgolkgame.pythonanywhere.com/cases', {
+	fetch('https://api.gldrop.fun/ru/cases/', {
 		method: 'GET',
 		credentials: 'include',
 		headers: {
