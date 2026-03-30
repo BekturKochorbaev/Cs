@@ -33,15 +33,13 @@ class SteamLoginView(View):
     def get(self, request):
         # Определяем базовый URL бэкенда и фронтенда
         # Лучше вынести это в .env, но для теста можно прописать так:
-        base_url = "https://api.gldrop.fan" 
-        realm_url = "https://gldrop.fun" # Ваш основной домен
+        base_url = "https://api.gldrop.fun"
+        realm_url = "https://gldrop.fun"
 
         params = {
             "openid.ns": "http://specs.openid.net/auth/2.0",
             "openid.mode": "checkid_setup",
-            # Возврат должен идти строго на бэкенд, который обработает данные
-            "openid.return_to": f"{base_url}/api/steam/callback/", 
-            # Realm должен указывать на главный сайт, которому пользователь доверяет
+            "openid.return_to": f"{base_url}/ru/steam/callback/",
             "openid.realm": f"{realm_url}/",
             "openid.identity": "http://specs.openid.net/auth/2.0/identifier_select",
             "openid.claimed_id": "http://specs.openid.net/auth/2.0/identifier_select",
