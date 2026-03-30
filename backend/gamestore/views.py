@@ -21,9 +21,12 @@ from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.views import View
 import requests
 from .auth import CsrfExemptSessionAuthentication
+from dotenv import load_dotenv
+load_dotenv()
 
 User = get_user_model()
 STEAM_OPENID_URL = "https://steamcommunity.com/openid/login"
+STEAM_API_KEY = os.getenv("STEAM_API_KEY")
 
 class SteamLoginView(View):
     def get(self, request):
@@ -43,7 +46,7 @@ class SteamCallbackView(View):
         if not claimed_id or "steamcommunity.com/openid/id/" not in claimed_id:
             return HttpResponseBadRequest("Invalid Steam response")
         steam_id = claimed_id.split("/")[-1]
-        steam_api_url = f"http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=04908ECF4DEC5452AD1103D6F7A5714C&steamids={steam_id}"
+        steam_api_url = f"http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={STEAM_API_KEY}&steamids={steam_id}"
         response = requests.get(steam_api_url)
         data = response.json()
         player_data = data.get("response", {}).get("players", [{}])[0]
