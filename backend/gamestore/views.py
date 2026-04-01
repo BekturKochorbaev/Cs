@@ -34,13 +34,12 @@ class SteamLoginView(View):
         # Определяем базовый URL бэкенда и фронтенда
         # Лучше вынести это в .env, но для теста можно прописать так:
         base_url = "https://api.gldrop.fun"
-        realm_url = "https://gldrop.fun"
 
         params = {
             "openid.ns": "http://specs.openid.net/auth/2.0",
             "openid.mode": "checkid_setup",
             "openid.return_to": f"{base_url}/ru/steam/callback/",
-            "openid.realm": f"{realm_url}/",
+            "openid.realm": f"{base_url}/",
             "openid.identity": "http://specs.openid.net/auth/2.0/identifier_select",
             "openid.claimed_id": "http://specs.openid.net/auth/2.0/identifier_select",
         }
